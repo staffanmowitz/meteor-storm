@@ -25,10 +25,7 @@ camera.rotation.set(20, 0, 0)
 // const helper = new THREE.CameraHelper(camera)
 // scene.add(helper)
 
-// const axis = new THREE.AxisHelper(10)
-// scene.add(axis)
-
-const renderer = new THREE.WebGLRenderer()
+const renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
 
@@ -43,10 +40,11 @@ scene.add(ambientLight)
 let meteors = []
 const meteorMaterial = new THREE.MeshLambertMaterial({ color: 0x555555 })
 const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
+const venusMaterial = new THREE.MeshLambertMaterial({ color: 0x888888 })
 
 let gems = []
 const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xf2f24e })
-const gemGeometry = new THREE.IcosahedronGeometry(10)
+const gemGeometry = new THREE.IcosahedronGeometry(7)
 
 let meteorStorm = new THREE.Group()
 
