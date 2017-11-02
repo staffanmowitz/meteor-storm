@@ -9,6 +9,8 @@ const randomNumber = function(min, max) {
   return Math.random() * (max - min) + min
 }
 
+const raycaster = new THREE.Raycaster()
+
 const scene = new THREE.Scene()
 
 // Add camera and set position
@@ -16,7 +18,7 @@ const camera = new THREE.PerspectiveCamera(
   75, // Fov
   window.innerWidth / window.innerHeight,
   0.1, // Near
-  1000 // Far
+  2000 // Far
 )
 
 camera.position.set(0, -70, 100)
@@ -51,16 +53,20 @@ let meteorStorm = new THREE.Group()
 // Create 100 meteors and 10 gems and randomly place them in the canvas
 for (var i = 0; i < 100; i++) {
   meteors[i] = new THREE.Mesh(meteorGeometry, meteorMaterial)
-  meteors[i].position.y = randomNumber(200, 1200)
+  meteors[i].position.y = randomNumber(500, 2000)
   meteors[i].position.x = randomNumber(-1000, 1000)
+
+  meteors[i].mass = 1
 
   meteorStorm.add(meteors[i])
 }
 
 for (var i = 0; i < 10; i++) {
   gems[i] = new THREE.Mesh(gemGeometry, gemMaterial)
-  gems[i].position.y = randomNumber(200, 1200)
+  gems[i].position.y = randomNumber(500, 2000)
   gems[i].position.x = randomNumber(-800, 800)
+
+  gems[i].mass = 0.7
 
   meteorStorm.add(gems[i])
 }
@@ -69,11 +75,86 @@ for (var i = 0; i < 10; i++) {
 meteorStorm.children.forEach(child => {
   child.rotationValueX = randomNumber(-0.02, 0.02)
   child.rotationValueY = randomNumber(-0.02, 0.02)
-  child.speed = randomNumber(1, 3)
-  child.direction = randomNumber(-0.3, 0.3)
+  child.velocity = new THREE.Vector3(
+    randomNumber(-0.3, 0.3),
+    randomNumber(1, 3),
+    randomNumber(1, 3)
+  )
 })
 
 scene.add(meteorStorm)
+
+const checkObjectCollisions = function(mesh) {
+  for (
+    let vertexIndex = 0;
+    vertexIndex < mesh.geometry.vertices.length;
+    vertexIndex++
+  ) {
+    const localVertex = mesh.geometry.vertices[vertexIndex].clone()
+    const globalVertex = localVertex.applyMatrix4(mesh.matrix)
+    const directionVector = globalVertex.sub(mesh.position)
+    const angle = mesh.velocity.angleTo(directionVector)
+
+    if (angle <= Math.PI / 2) {
+      raycaster.set(mesh.position, directionVector.clone().normalize())
+      const collisionResults = raycaster.intersectObjects(meteorStorm.children)
+
+      if (
+        collisionResults.length > 0 &&
+        collisionResults[0].distance < directionVector.length()
+      ) {
+        handleObjectsCollision(mesh, collisionResults[0])
+        break
+      }
+    }
+  }
+}
+
+const OBJ_SIZE = 10
+
+function handleObjectsCollision(meshA, collisionResult) {
+  const meshB = collisionResult.object
+
+  const collision = new THREE.Vector3()
+  collision.x =
+    (meshA.position.x * OBJ_SIZE + meshB.position.x * OBJ_SIZE) /
+    (OBJ_SIZE + OBJ_SIZE)
+  collision.y =
+    (meshA.position.y * OBJ_SIZE + meshB.position.y * OBJ_SIZE) /
+    (OBJ_SIZE + OBJ_SIZE)
+  collision.z =
+    (meshA.position.z * OBJ_SIZE + meshB.position.z * OBJ_SIZE) /
+    (OBJ_SIZE + OBJ_SIZE)
+
+  const masses = meshA.mass + meshB.mass
+  const avX =
+    (meshA.velocity.x * (meshA.mass - meshB.mass) +
+      2 * meshB.mass * meshB.velocity.x) /
+    masses
+  const avY =
+    (meshA.velocity.y * (meshA.mass - meshB.mass) +
+      2 * meshB.mass * meshB.velocity.y) /
+    masses
+  const avZ =
+    (meshA.velocity.z * (meshA.mass - meshB.mass) +
+      2 * meshB.mass * meshB.velocity.z) /
+    masses
+  const bvX =
+    (meshB.velocity.x * (meshB.mass - meshA.mass) +
+      2 * meshA.mass * meshA.velocity.x) /
+    masses
+  const bvY =
+    (meshB.velocity.y * (meshB.mass - meshA.mass) +
+      2 * meshA.mass * meshA.velocity.y) /
+    masses
+  const bvZ =
+    (meshB.velocity.z * (meshB.mass - meshA.mass) +
+      2 * meshA.mass * meshA.velocity.z) /
+    masses
+
+  meshA.velocity.set(avX, avY, avZ)
+  meshB.velocity.set(bvX, bvY, bvZ)
+}
 
 // // Add the ship
 loader.load('B2_full.obj', ship => {
@@ -99,8 +180,13 @@ const animate = function() {
   meteorStorm.children.forEach(child => {
     child.rotation.x += child.rotationValueX
     child.rotation.y += child.rotationValueY
-    child.position.y -= child.speed
-    child.position.x -= child.direction
+    child.position.y -= child.velocity.y
+    child.position.x -= child.velocity.x
+    child.updateMatrixWorld()
+  })
+
+  meteorStorm.children.forEach(child => {
+    checkObjectCollisions(child)
   })
 
   renderer.render(scene, camera)
