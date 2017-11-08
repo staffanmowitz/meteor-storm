@@ -21,8 +21,8 @@ canvas {
 .score,
 .lives,
 .game-over {
-  text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #f70000,
-    0 0 35px #f70000, 0 0 40px #f70000, 0 0 50px #f70000, 0 0 75px #f70000;
+  text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00ff,
+    0 0 35px #ff00ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff, 0 0 75px #ff00ff;
 }
 
 .score,

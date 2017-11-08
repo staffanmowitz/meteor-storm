@@ -1,9 +1,14 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon'
+import * as Howler from 'howler'
 require('./OBJLoader.js')(THREE)
 // require("./cannondebugrenderer.js")(THREE);
 const mesh2shape = require('three-to-cannon')
 import THREEx from './threex.keyboardstate'
+
+function rand(min, max) {
+  return Math.random() * (max - min) + min
+}
 
 var world,
   mass,
@@ -18,14 +23,19 @@ var world,
   b1
 
 let updateFns = []
-let cannonParticles = []
-let threeParticles = []
+let cannonMeteors = []
+let threeMeteors = []
 let initMeteorPos = []
 var timeStep = 1 / 60
 
 let score = 0
 let bonus = 0
 let lives = 3
+
+// ADD SOUND EFFECTS
+const bonusSound = new Howl({ src: 'bonus.wav' })
+const lifeSound = new Howl({ src: 'life.wav' })
+const crashSound = new Howl({ src: 'crash.wav' })
 
 // ADD LIVES COUNTER
 const livesContainer = document.createElement('div')
@@ -53,10 +63,9 @@ const gameOver = function() {
   document.body.appendChild(gameOverContainer)
 }
 
-// initThree();
 initCannon()
 
-// function initThree() {
+// CREATE THREE SCENE
 scene = new THREE.Scene()
 
 // ADD CAMERA TO THE SCENE
@@ -79,15 +88,17 @@ scene.add(pointLight)
 const ambientLight = new THREE.AmbientLight(0xf0f0f0, 0.3)
 scene.add(ambientLight)
 
+// INITIALIZE RENDERER
 renderer = new THREE.WebGLRenderer({ antialias: true })
 renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000)
 document.body.appendChild(renderer.domElement)
 
-// GRID
+// CREATE BACKGROUND GRID
 let ackY = 0
 let ackX = -1000
 let gridX = []
+
 for (var i = 0; i < 40; i++) {
   var lineMaterial = new THREE.LineBasicMaterial({
     color: 0x4ef7da,
@@ -128,23 +139,18 @@ renderer.domElement.focus()
 
 //////////////////////////////////////////////////////////////////////
 
-// } //end of init three function
-
 function initCannon() {
   world = new CANNON.World()
-  world.gravity.set(0, 0, 0)
+  // world.gravity.set(0, 0, 0)
   world.broadphase = new CANNON.NaiveBroadphase()
   world.solver.iterations = 10
 
-  function rand(min, max) {
-    return Math.random() * (max - min) + min
-  }
-
-  var boxShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20))
+  // CREATE CANNON METEORS
+  var meteorShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20))
 
   for (var i = 0; i < 100; i++) {
     b1 = new CANNON.Body({ mass: 5, linearFactor: new CANNON.Vec3(0, 1, 0) })
-    b1.addShape(boxShape)
+    b1.addShape(meteorShape)
 
     initMeteorPos.push(rand(-3, -1))
     b1.velocity.set(0, 0, 0)
@@ -160,11 +166,22 @@ function initCannon() {
     // b1.quaternion.set(q.x, q.y, q.z, q.w);
 
     world.addBody(b1)
-    cannonParticles.push(b1)
+    cannonMeteors.push(b1)
     // demo.addVisual(b1);
   }
 }
 
+// CREATE THREE METEORS
+geometry = new THREE.BoxGeometry(20, 20, 20)
+material = new THREE.MeshLambertMaterial({ color: 0xff00ff })
+
+cannonMeteors.forEach(particle => {
+  const cube = new THREE.Mesh(geometry, material)
+  scene.add(cube)
+  threeMeteors.push(cube)
+})
+
+// CREATE SHIP
 // instantiate a loader
 var loader = new THREE.OBJLoader()
 
@@ -177,6 +194,7 @@ loader.load(
     threeShip.scale.set(0.05, 0.05, 0.05)
     threeShip.rotation.x = 6.3
     threeShip.rotation.z = 3.13
+    threeShip.position.y = 10
 
     const shipNewMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
     const shipBoundingBoxMaterial = new THREE.MeshBasicMaterial({
@@ -192,11 +210,14 @@ loader.load(
 
     world.addBody(shipBody)
 
+    // ADD COLLIDE EVENT LISTENER
     shipBody.addEventListener('collide', e => {
-      console.log('skeppet krockade')
-      console.log(e.body)
+      console.log('Skeppet krockade')
+      // console.log(e.body)
 
       e.body.velocity.set(-500, 500, 500)
+      crashSound.play()
+      // lives--
     })
 
     updateFns.push(() => {
@@ -248,15 +269,6 @@ loader.load(
     console.log('An error happened')
   }
 )
-// CREATE THREE PARTICLES
-geometry = new THREE.BoxGeometry(20, 20, 20)
-material = new THREE.MeshLambertMaterial({ color: 0xff00ff })
-
-cannonParticles.forEach(particle => {
-  const cube = new THREE.Mesh(geometry, material)
-  scene.add(cube)
-  threeParticles.push(cube)
-})
 
 function animate() {
   requestAnimationFrame(animate)
@@ -280,10 +292,14 @@ function updatePhysics() {
   world.step(timeStep)
 
   // Copy coordinates from Cannon.js to Three.js
-  cannonParticles.forEach((particle, index) => {
-    threeParticles[index].position.copy(particle.position)
-    threeParticles[index].quaternion.copy(particle.quaternion)
+  cannonMeteors.forEach((particle, index) => {
+    threeMeteors[index].position.copy(particle.position)
+    threeMeteors[index].quaternion.copy(particle.quaternion)
     particle.position.y += initMeteorPos[index] - score / 500
+
+    if (particle.position.y < -10) {
+      particle.position.set(rand(-1000, 1000), rand(2000, 3000), 0)
+    }
   })
 }
 
