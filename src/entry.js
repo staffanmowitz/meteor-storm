@@ -10,21 +10,22 @@ function rand(min, max) {
   return Math.random() * (max - min) + min
 }
 
-var world,
-  mass,
-  camera,
-  scene,
-  renderer,
-  geometry,
-  material,
-  material2,
-  mesh,
-  mesh2,
-  b1
+let world
+let camera
+let scene
+let renderer
+
+let cannonMeteor
+let cannonGem
 
 let updateFns = []
+
 let cannonMeteors = []
+let cannonGems = []
+
 let threeMeteors = []
+let threeGems = []
+
 let initMeteorPos = []
 var timeStep = 1 / 60
 
@@ -135,50 +136,85 @@ var keyboard = new THREEx.KeyboardState(renderer.domElement)
 renderer.domElement.setAttribute('tabIndex', '0')
 renderer.domElement.focus()
 
-//////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////
-
+// CREATE CANNON.JS WORLD
 function initCannon() {
   world = new CANNON.World()
   // world.gravity.set(0, 0, 0)
   world.broadphase = new CANNON.NaiveBroadphase()
   world.solver.iterations = 10
 
-  // CREATE CANNON METEORS
-  var meteorShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20))
+  // CREATE CANNON.JS METEORS
+  const meteorShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20))
 
   for (var i = 0; i < 100; i++) {
-    b1 = new CANNON.Body({ mass: 5, linearFactor: new CANNON.Vec3(0, 1, 0) })
-    b1.addShape(meteorShape)
+    cannonMeteor = new CANNON.Body({
+      mass: 5,
+      linearFactor: new CANNON.Vec3(0, 1, 0)
+    })
+    cannonMeteor.addShape(meteorShape)
 
     initMeteorPos.push(rand(-3, -1))
-    b1.velocity.set(0, 0, 0)
-    b1.position.set(rand(-1000, 1000), rand(500, 2000), 0)
-    b1.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
-    // b1.linearDamping = 0
-    var q1 = new CANNON.Quaternion()
+    cannonMeteor.velocity.set(0, 0, 0)
+    cannonMeteor.position.set(rand(-1000, 1000), rand(500, 2000), 0)
+    cannonMeteor.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
+    // cannonMeteor.linearDamping = 0
+    let q1 = new CANNON.Quaternion()
     q1.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    var q2 = new CANNON.Quaternion()
+    let q2 = new CANNON.Quaternion()
     q2.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    var q = q1.mult(q2)
-    b1.quaternion.set(q.x, q.y, q.z, q.w)
-    // b1.quaternion.set(q.x, q.y, q.z, q.w);
+    let q = q1.mult(q2)
+    cannonMeteor.quaternion.set(q.x, q.y, q.z, q.w)
 
-    world.addBody(b1)
-    cannonMeteors.push(b1)
-    // demo.addVisual(b1);
+    world.addBody(cannonMeteor)
+    cannonMeteors.push(cannonMeteor)
+    // demo.addVisual(cannonMeteor)
+  }
+
+  const gemShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
+
+  for (var i = 0; i < 10; i++) {
+    cannonGem = new CANNON.Body({
+      mass: 2,
+      linearFactor: new CANNON.Vec3(0, 1, 0)
+    })
+    cannonGem.addShape(gemShape)
+
+    initMeteorPos.push(rand(-3, -1))
+    cannonGem.velocity.set(0, 0, 0)
+    cannonGem.position.set(rand(-1000, 1000), rand(500, 2000), 0)
+    cannonGem.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
+    // cannonGem.linearDamping = 0
+    let q1 = new CANNON.Quaternion()
+    q1.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
+    let q2 = new CANNON.Quaternion()
+    q2.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
+    let q = q1.mult(q2)
+    cannonGem.quaternion.set(q.x, q.y, q.z, q.w)
+
+    world.addBody(cannonGem)
+    cannonGems.push(cannonGem)
+    // demo.addVisual(cannonMeteor)
   }
 }
 
-// CREATE THREE METEORS
-geometry = new THREE.BoxGeometry(20, 20, 20)
-material = new THREE.MeshLambertMaterial({ color: 0xff00ff })
+// CREATE THREE.JS METEORS
+const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
+const meteorMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 })
 
 cannonMeteors.forEach(particle => {
-  const cube = new THREE.Mesh(geometry, material)
+  const cube = new THREE.Mesh(meteorGeometry, meteorMaterial)
   scene.add(cube)
   threeMeteors.push(cube)
+})
+
+// CREATE THREE.JS GEMS
+const gemGeometry = new THREE.BoxGeometry(10, 10, 10)
+const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xff00ff })
+
+cannonGems.forEach(particle => {
+  const cube = new THREE.Mesh(gemGeometry, gemMaterial)
+  scene.add(cube)
+  threeGems.push(cube)
 })
 
 // CREATE SHIP
@@ -197,11 +233,11 @@ loader.load(
     threeShip.position.y = 10
 
     const shipNewMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
-    const shipBoundingBoxMaterial = new THREE.MeshBasicMaterial({
-      color: 0xff00ff
-    })
+    // const shipBoundingBoxMaterial = new THREE.MeshBasicMaterial({
+    //   color: 0xff00ff
+    // })
 
-    threeShip.children[0].material = shipNewMaterial
+    // threeShip.children[0].material = shipNewMaterial
 
     const cannonShip = mesh2shape(threeShip, { type: mesh2shape.Type.BOX })
     const shipBody = new CANNON.Body()
@@ -291,10 +327,20 @@ function updatePhysics() {
   // Step the physics world
   world.step(timeStep)
 
-  // Copy coordinates from Cannon.js to Three.js
+  // COPY COORDINATES FROM CANNON.JS TO THREE.JS
   cannonMeteors.forEach((particle, index) => {
     threeMeteors[index].position.copy(particle.position)
     threeMeteors[index].quaternion.copy(particle.quaternion)
+    particle.position.y += initMeteorPos[index] - score / 500
+
+    if (particle.position.y < -10) {
+      particle.position.set(rand(-1000, 1000), rand(2000, 3000), 0)
+    }
+  })
+
+  cannonGems.forEach((particle, index) => {
+    threeGems[index].position.copy(particle.position)
+    threeGems[index].quaternion.copy(particle.quaternion)
     particle.position.y += initMeteorPos[index] - score / 500
 
     if (particle.position.y < -10) {
