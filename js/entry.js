@@ -1,30 +1,55 @@
 'use strict'
 
 import * as THREE from 'three'
-import THREEx from './threex.keyboardstate'
-require('./obj-loader')(THREE)
+import * as Howler from 'howler'
 
+import THREEx from './threex.keyboardstate'
+
+require('./obj-loader')(THREE)
+// INSTATINATE A LOADER
+const loader = new THREE.OBJLoader()
+
+// BASIC SETUP
 let score = 0
 let lives = 3
+let bonus = 0
 
+const themeSong = new Howl({ src: 'mixed-bag.mp3', volume: 0.5 })
+const bonusSound = new Howl({ src: 'bonus.wav' })
+const lifeSound = new Howl({ src: 'life.wav' })
+const crashSound = new Howl({ src: 'crash.wav' })
+
+themeSong.play()
+
+// ADD LIVES COUNTER
 const livesContainer = document.createElement('div')
 livesContainer.classList.add('lives')
 let livesContent = document.createTextNode('Lives: ' + lives)
 livesContainer.appendChild(livesContent)
 document.body.appendChild(livesContainer)
 
+// ADD SCORE COUNTER
 const scoreContainer = document.createElement('div')
 scoreContainer.classList.add('score')
 let scoreContent = document.createTextNode('Score: ' + score)
 scoreContainer.appendChild(scoreContent)
 document.body.appendChild(scoreContainer)
 
+// ADD GAME OVER TEXT
 const gameOver = function() {
+  themeSong.stop()
   const gameOverContainer = document.createElement('div')
   gameOverContainer.classList.add('game-over')
-  let gameOverContent = document.createTextNode('Game Over')
-  gameOverContainer.appendChild(gameOverContent)
+  // let gameOverContent = document.createTextNode('Game Over')
+  // gameOverContainer.appendChild(gameOverContent)
+  gameOverContainer.innerHTML =
+    '<p class="large">Game Over</p><p>Your Score: ' + (score + bonus) + '</p>'
   document.body.appendChild(gameOverContainer)
+}
+
+// GET RANDOM NUMBER
+const randomNumber = function(min, max) {
+  return Math.random() * (max - min) + min
 }
 
 // INITIALIZE RENDERER
@@ -38,11 +63,6 @@ renderer.domElement.setAttribute('tabIndex', '0')
 renderer.domElement.focus()
 
 let updateFcts = []
-
-// GET RANDOM NUMBER
-const randomNumber = function(min, max) {
-  return Math.random() * (max - min) + min
-}
 
 const raycaster = new THREE.Raycaster()
 
@@ -67,37 +87,41 @@ scene.add(pointLight)
 const ambientLight = new THREE.AmbientLight(0xf0f0f0, 0.3)
 scene.add(ambientLight)
 
-// const fontLoader = new THREE.FontLoader()
+// // LOAD METEOR OBJECTS
+// const loadMeteor = function(obj) {
+//   loader.load(
+//     // RESOURCE URL
+//     obj,
+//     // FUNCTION WHEN RESOURCE IS LOADED
+//     meteor => {
+//       meteor.traverse(function(node) {
+//         const basicMaterial = new THREE.MeshLambertMaterial({
+//           color: 0x555555
+//         })
 //
-// const textMaterial = new THREE.MeshPhongMaterial({
-//   color: 0xff0000,
-//   specular: 0xffffff
-// })
+//         if (node.geometry) {
+//           node.material.side = THREE.FrontSide
+//           node.material = basicMaterial
+//         }
 //
-// const updateScore = function(score) {
-//   fontLoader.load('ambroney-normal.json', function(font) {
-//     let textGeometry = new THREE.TextGeometry('Score: ' + score, {
-//       font: font,
-//       size: 80,
-//       height: 20,
-//       curveSegments: 12,
-//       bevelEnabled: false,
-//       bevelThickness: 5,
-//       bevelSize: 2,
-//       bevelSegments: 5
-//     })
+//         // DON'T USE DAT GUI
+//         meteor.scale.set(5, 5, 5)
+//         meteor.position.set(randomNumber(-100, 100), randomNumber(100, 300), 0)
+//         meteor.rotation.set(6, 0, 3.13)
 //
-//     let textMesh = new THREE.Mesh(textGeometry, textMaterial)
+//         meteor.name = 'Meteor'
 //
-//     textMesh.position.y = 1200
-//     textMesh.position.x = -1300
-//     textMesh.position.z = 100
-//     textMesh.rotation.x = 1.2
-//
-//     scene.add(textMesh)
-//     // scene.remove(textMesh)
-//   })
+//         scene.add(meteor)
+//       })
+//     }
+//   )
 // }
+//
+// loadMeteor('meteor-1.obj')
+// loadMeteor('meteor-2.obj')
+// loadMeteor('meteor-3.obj')
+// loadMeteor('meteor-4.obj')
+// loadMeteor('meteor-5.obj')
 
 // CREATE METEOR STORM!
 let meteorStorm = new THREE.Group()
@@ -110,14 +134,13 @@ let gems = []
 const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xe3c08b })
 const gemGeometry = new THREE.IcosahedronGeometry(7)
 
-let xtraLives = []
 const xtraLifeMaterial = new THREE.MeshLambertMaterial({ color: 0xad4442 })
 const xtraLifeGeometry = new THREE.IcosahedronGeometry(5)
 
 // CREATE 100 GEMS AND RANDOMLY PLACE THEM ON THE CANVAS
 for (let i = 0; i < 100; i++) {
   meteors[i] = new THREE.Mesh(meteorGeometry, meteorMaterial)
-  meteors[i].position.y = randomNumber(500, 2000)
+  meteors[i].position.y = randomNumber(1000, 2500)
   meteors[i].position.x = randomNumber(-1000, 1000)
   meteors[i].mass = 1
   meteors[i].name = 'Meteor'
@@ -126,26 +149,24 @@ for (let i = 0; i < 100; i++) {
 }
 
 // CREATE 10 GEMS AND RANDOMLY PLACE THEM ON THE CANVAS
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 5; i++) {
   gems[i] = new THREE.Mesh(gemGeometry, gemMaterial)
   gems[i].position.y = randomNumber(500, 2000)
-  gems[i].position.x = randomNumber(-800, 800)
+  gems[i].position.x = randomNumber(-500, 500)
   gems[i].mass = 0.7
   gems[i].name = 'Gem'
 
   meteorStorm.add(gems[i])
 }
 
-// CREATE 2 EXTRA LIVES AND RANDOMLY PLACE THEM ON THE CANVAS
-for (let i = 0; i < 2; i++) {
-  xtraLives[i] = new THREE.Mesh(xtraLifeGeometry, xtraLifeMaterial)
-  xtraLives[i].position.y = randomNumber(500, 2000)
-  xtraLives[i].position.x = randomNumber(-800, 800)
-  xtraLives[i].mass = 0.5
-  xtraLives[i].name = 'xtraLife'
+// CREATE 1 EXTRA LIFE AND RANDOMLY PLACE THEM ON THE CANVAS
+const xtraLife = new THREE.Mesh(xtraLifeGeometry, xtraLifeMaterial)
+xtraLife.position.y = randomNumber(500, 2000)
+xtraLife.position.x = randomNumber(-500, 500)
+xtraLife.mass = 0.5
+xtraLife.name = 'xtraLife'
 
-  meteorStorm.add(xtraLives[i])
-}
+meteorStorm.add(xtraLife)
 
 // GIVE METEORS AND GEMS RANDOM ROTATION AND VELOCITY VALUES
 meteorStorm.children.forEach(child => {
@@ -153,8 +174,7 @@ meteorStorm.children.forEach(child => {
   child.rotationValueY = randomNumber(-0.02, 0.02)
   child.velocity = new THREE.Vector3(
     randomNumber(-0.3, 0.3),
-    randomNumber(2, 5),
-    // randomNumber(1, 3)
+    randomNumber(5, 7),
     0
   )
 })
@@ -169,8 +189,8 @@ const addToStorm = function(mesh) {
   mesh.rotationValueY = randomNumber(-0.02, 0.02)
   mesh.velocity = new THREE.Vector3(
     randomNumber(-0.3, 0.3),
-    randomNumber(1, 3),
-    randomNumber(1, 3)
+    randomNumber(5, 7),
+    0
   )
 }
 
@@ -209,16 +229,19 @@ function handleObjectsCollision(meshA, collisionResult) {
 
   if (meshA.name === 'Ship') {
     if (meshB.name === 'Gem') {
-      score = score + 2000
+      bonus = bonus + 5000
+      bonusSound.play()
     }
 
     if (meshB.name === 'xtraLife') {
       lives++
+      lifeSound.play()
     }
 
     if (meshB.name === 'Meteor') {
       if (lives > 0) {
         lives--
+        crashSound.play()
       }
     }
 
@@ -269,8 +292,6 @@ function handleObjectsCollision(meshA, collisionResult) {
 /////////////////////
 //  ADD SPACESHIP //
 ///////////////////
-// INSTATINATE A LOADER
-const loader = new THREE.OBJLoader()
 
 // LOAD A RESOURCE
 loader.load(
@@ -305,7 +326,18 @@ loader.load(
     })
 
     updateFcts.push(function(delta, now) {
+      // CHECK SHIP COLLISION
       checkObjectCollisions(ship)
+
+      // CHANGE COLOR OF SHIP AFTER COLLISION
+      if (lives === 2) {
+        ship.children[0].material.color.setHex(0xd5a973)
+      } else if (lives <= 1) {
+        ship.children[0].material.color.setHex(0xb36050)
+      } else {
+        ship.children[0].material.color.setHex(0xbbbbbb)
+      }
+
       //////////////////////
       //  MOVE SPACESHIP  //
       //////////////////////
@@ -353,22 +385,30 @@ requestAnimationFrame(function animate(nowMsec) {
     gameOver()
   }
 
+  let viewVector
+
   // ADD METEORS
   meteorStorm.children.forEach(child => {
     child.rotation.x += child.rotationValueX
     child.rotation.y += child.rotationValueY
-    child.position.y -= child.velocity.y
+    child.position.y -= child.velocity.y + score / 500
     child.position.x -= child.velocity.x
     child.updateMatrixWorld()
+
+    if (child.position.y < -10) {
+      addToStorm(child)
+    }
   })
 
   meteorStorm.children.forEach(child => {
     checkObjectCollisions(child)
   })
 
+  const meteors = scene.children.filter(child => child.name == 'Meteor')
+
   score++
 
-  scoreContent.textContent = `Score: ${score}`
+  scoreContent.textContent = `Score: ${score + bonus}`
   livesContent.textContent = `Lives: ${lives}`
 
   // MEASURE TIME
