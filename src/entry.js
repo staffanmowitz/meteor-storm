@@ -51,7 +51,7 @@ let lives = 3
 const bonusSound = new Howl({ src: 'bonus.wav' })
 const lifeSound = new Howl({ src: 'life.wav' })
 const crashSound = new Howl({ src: 'crash.wav' })
-const music = new Howl({ src: 'music.mp3' })
+const music = new Howl({ src: 'highway-slaughter.mp3', volume: 0.5 })
 
 music.play()
 
@@ -73,7 +73,7 @@ document.body.appendChild(scoreContainer)
 const gameOver = function(shipBody, threeShip) {
   world.removeBody(shipBody)
   scene.remove(threeShip)
-  music.stop()
+  music.fade(0.5, 0, 1000)
   const gameOverContainer = document.createElement('div')
   gameOverContainer.classList.add('game-over')
   // let gameOverContent = document.createTextNode('Game Over')
