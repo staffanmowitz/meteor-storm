@@ -1,6 +1,20 @@
+// TODO
+// - Skeppet ska inte kunna åka utanför skärmen
+// - Rotation på meteorer
+// - Tilt på skeppet
+// - Använda modeller för meteorer
+// - Endast ett collide-event per krock!
+// - Intro
+// - Outro efter game over
+// - Explodera meteorer
+// - Explodera skepp
+// - Shield/glow på skepp
+// - Håll kvar meteorer på z-axeln
+
 import * as THREE from 'three'
 import * as CANNON from 'cannon'
 import * as Howler from 'howler'
+require('./cannondebugrenderer.js')(THREE, CANNON)
 require('./OBJLoader.js')(THREE)
 // require("./cannondebugrenderer.js")(THREE);
 const mesh2shape = require('three-to-cannon')
@@ -37,6 +51,9 @@ let lives = 3
 const bonusSound = new Howl({ src: 'bonus.wav' })
 const lifeSound = new Howl({ src: 'life.wav' })
 const crashSound = new Howl({ src: 'crash.wav' })
+const music = new Howl({ src: 'music.mp3' })
+
+music.play()
 
 // ADD LIVES COUNTER
 const livesContainer = document.createElement('div')
@@ -53,8 +70,10 @@ scoreContainer.appendChild(scoreContent)
 document.body.appendChild(scoreContainer)
 
 // ADD GAME OVER TEXT
-const gameOver = function() {
-  themeSong.stop()
+const gameOver = function(shipBody, threeShip) {
+  world.removeBody(shipBody)
+  scene.remove(threeShip)
+  music.stop()
   const gameOverContainer = document.createElement('div')
   gameOverContainer.classList.add('game-over')
   // let gameOverContent = document.createTextNode('Game Over')
@@ -95,6 +114,9 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000)
 document.body.appendChild(renderer.domElement)
 
+// INITIALIZE CANNON DEBUG RENDERER
+var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
+
 // CREATE BACKGROUND GRID
 let ackY = 0
 let ackX = -1000
@@ -129,7 +151,7 @@ for (var i = 0; i < 40; i++) {
 }
 
 // INITIALIZE CANNON DEBUG RENDERER
-// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
 
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new THREEx.KeyboardState(renderer.domElement)
@@ -144,33 +166,28 @@ function initCannon() {
   world.solver.iterations = 10
 
   // CREATE CANNON.JS METEORS
-  const meteorShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20))
+  const meteorShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
 
   for (var i = 0; i < 100; i++) {
     cannonMeteor = new CANNON.Body({
       mass: 5,
-      linearFactor: new CANNON.Vec3(0, 1, 0)
+      linearFactor: new CANNON.Vec3(0, 0, 0)
+      // angularFactor: new CANNON.Vec3(0, 0, 0)
     })
     cannonMeteor.addShape(meteorShape)
 
+    // PLACE METEORS RANDOMLY ON CANVAS AND GIVE THEM RANDOM VELOCITY
     initMeteorPos.push(rand(-3, -1))
-    cannonMeteor.velocity.set(0, 0, 0)
     cannonMeteor.position.set(rand(-1000, 1000), rand(500, 2000), 0)
     cannonMeteor.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
-    // cannonMeteor.linearDamping = 0
-    let q1 = new CANNON.Quaternion()
-    q1.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    let q2 = new CANNON.Quaternion()
-    q2.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    let q = q1.mult(q2)
-    cannonMeteor.quaternion.set(q.x, q.y, q.z, q.w)
+
+    cannonMeteor.name = 'Meteor'
 
     world.addBody(cannonMeteor)
     cannonMeteors.push(cannonMeteor)
-    // demo.addVisual(cannonMeteor)
   }
 
-  const gemShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
+  const gemShape = new CANNON.Box(new CANNON.Vec3(5, 5, 5))
 
   for (var i = 0; i < 10; i++) {
     cannonGem = new CANNON.Body({
@@ -179,21 +196,15 @@ function initCannon() {
     })
     cannonGem.addShape(gemShape)
 
+    // PLACE GEMS RANDOMLY ON CANVAS
     initMeteorPos.push(rand(-3, -1))
-    cannonGem.velocity.set(0, 0, 0)
     cannonGem.position.set(rand(-1000, 1000), rand(500, 2000), 0)
     cannonGem.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
-    // cannonGem.linearDamping = 0
-    let q1 = new CANNON.Quaternion()
-    q1.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    let q2 = new CANNON.Quaternion()
-    q2.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25)
-    let q = q1.mult(q2)
-    cannonGem.quaternion.set(q.x, q.y, q.z, q.w)
+
+    cannonGem.name = 'Gem'
 
     world.addBody(cannonGem)
     cannonGems.push(cannonGem)
-    // demo.addVisual(cannonMeteor)
   }
 }
 
@@ -201,7 +212,7 @@ function initCannon() {
 const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
 const meteorMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 })
 
-cannonMeteors.forEach(particle => {
+cannonMeteors.forEach(meteor => {
   const cube = new THREE.Mesh(meteorGeometry, meteorMaterial)
   scene.add(cube)
   threeMeteors.push(cube)
@@ -211,7 +222,7 @@ cannonMeteors.forEach(particle => {
 const gemGeometry = new THREE.BoxGeometry(10, 10, 10)
 const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xff00ff })
 
-cannonGems.forEach(particle => {
+cannonGems.forEach(gem => {
   const cube = new THREE.Mesh(gemGeometry, gemMaterial)
   scene.add(cube)
   threeGems.push(cube)
@@ -233,13 +244,10 @@ loader.load(
     threeShip.position.y = 10
 
     const shipNewMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff })
-    // const shipBoundingBoxMaterial = new THREE.MeshBasicMaterial({
-    //   color: 0xff00ff
-    // })
 
-    // threeShip.children[0].material = shipNewMaterial
-
-    const cannonShip = mesh2shape(threeShip, { type: mesh2shape.Type.BOX })
+    const cannonShip = mesh2shape(threeShip, { type: mesh2shape.Type.SPHERE })
+    cannonShip.radius = 10
+    console.log(cannonShip)
     const shipBody = new CANNON.Body()
     shipBody.addShape(cannonShip)
     shipBody.position.y = 10
@@ -248,50 +256,68 @@ loader.load(
 
     // ADD COLLIDE EVENT LISTENER
     shipBody.addEventListener('collide', e => {
-      console.log('Skeppet krockade')
-      // console.log(e.body)
+      console.log('Skeppet krockade med en ' + e.body.name)
 
-      e.body.velocity.set(-500, 500, 500)
-      crashSound.play()
-      // lives--
+      if (e.body.name === 'Meteor') {
+        if (lives >= 0) {
+          lives--
+          crashSound.play()
+          // e.body.velocity.set(-500, 500, 500)
+          e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0)
+        }
+
+        if (lives === -1) {
+          gameOver(shipBody, threeShip)
+        }
+      }
+
+      if (e.body.name === 'Gem') {
+        bonus += 5000
+        bonusSound.play()
+        e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0)
+      }
     })
 
     updateFns.push(() => {
-      //////////////////////////////////////////////////////////////////////////////////
-      //		MOVE SPACESHIP								//
-      //////////////////////////////////////////////////////////////////////////////////
+      ////////////////////////////////////////
+      // MOVE SPACESHIP                    //
+      ///////////////////////////////////////
       //MOVE TO THE LEFT
       if (keyboard.pressed('left')) {
-        shipBody.position.x -= 3
+        shipBody.position.x -= 4
 
         // // TILT LEFT
-        // if (shipBody.rotation.y > -1) {
-        //   shipBody.rotation.y -= 2 * delta;
-        // }
+        if (threeShip.rotation.y > -1) {
+          threeShip.rotation.y -= 0.1
+          // * delta;
+        }
         // MOVE TO THE RIGHT
       } else if (keyboard.pressed('right')) {
-        shipBody.position.x += 3
+        shipBody.position.x += 4
 
         // TILT RIGHT
-        // if (shipBody.rotation.y < 1) {
-        //   shipBody.rotation.y += 2 * delta;
-      } else if (keyboard.pressed('up')) {
-        shipBody.position.y += 1
-      } else if (keyboard.pressed('down')) {
-        shipBody.position.y -= 1
+        if (threeShip.rotation.y < 1) {
+          threeShip.rotation.y += 0.1
+          // * delta;
+        } else if (keyboard.pressed('up')) {
+          shipBody.position.y += 4
+        } else if (keyboard.pressed('down') && shipBody.position.y > 10) {
+          shipBody.position.y -= 4
+        }
+
+        // RESET LEFT TILT ON KEY UP
+      } else if (threeShip.rotation.y > 0.5) {
+        threeShip.rotation.y -= 0.1
+        // * delta
+        // RESET RIGHT TILT ON KEY UP
+      } else if (threeShip.rotation.y < 0) {
+        threeShip.rotation.y += 0.1
+        // * delta
+      } else {
+        threeShip.rotation.y = 0
       }
-      // RESET LEFT TILT ON KEY UP
-      // } else if (shipBody.rotation.y > 0.05) {
-      //   shipBody.rotation.y -= 2 * delta;
-      //   // RESET RIGHT TILT ON KEY UP
-      // } else if (shipBody.rotation.y < 0) {
-      //   shipBody.rotation.y += 2 * delta;
-      // } else {
-      //   shipBody.rotation.y = 0;
-      // }
 
       threeShip.position.copy(shipBody.position)
-      // object.rotation.copy(shipBody.rotation);
     })
 
     scene.add(threeShip)
@@ -309,7 +335,7 @@ loader.load(
 function animate() {
   requestAnimationFrame(animate)
   updatePhysics()
-  // cannonDebugRenderer.update();
+  cannonDebugRenderer.update()
   updateGrid()
   render()
 
@@ -317,38 +343,57 @@ function animate() {
     fn()
   })
 
-  score++
-  scoreContent.textContent = `Score: ${score + bonus}`
-  livesContent.textContent = `Lives: ${lives}`
+  if (lives >= 0) {
+    score++
+    scoreContent.textContent = `Score: ${score + bonus}`
+    livesContent.textContent = `Lives: ${lives}`
+  }
 }
 animate()
 
 function updatePhysics() {
+  cannonDebugRenderer.update()
+
   // Step the physics world
   world.step(timeStep)
 
   // COPY COORDINATES FROM CANNON.JS TO THREE.JS
-  cannonMeteors.forEach((particle, index) => {
-    threeMeteors[index].position.copy(particle.position)
-    threeMeteors[index].quaternion.copy(particle.quaternion)
-    particle.position.y += initMeteorPos[index] - score / 500
+  cannonMeteors.forEach((meteor, index) => {
+    threeMeteors[index].position.copy(meteor.position)
+    meteor.position.y += initMeteorPos[index] - score / 500
+    meteor.position.z = 0
 
-    if (particle.position.y < -10) {
-      particle.position.set(rand(-1000, 1000), rand(2000, 3000), 0)
+    threeMeteors[index].quaternion.copy(meteor.quaternion)
+
+    if (
+      meteor.position.y < -10 ||
+      meteor.position.x > 1000 ||
+      meteor.position.x < -1000
+    ) {
+      meteor.position.set(rand(-1000, 1000), rand(1000, 2000), 0)
+      meteor.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
     }
   })
 
-  cannonGems.forEach((particle, index) => {
-    threeGems[index].position.copy(particle.position)
-    threeGems[index].quaternion.copy(particle.quaternion)
-    particle.position.y += initMeteorPos[index] - score / 500
+  cannonGems.forEach((gem, index) => {
+    threeGems[index].position.copy(gem.position)
+    threeGems[index].quaternion.copy(gem.quaternion)
+    gem.position.y += initMeteorPos[index] - score / 500
+    gem.position.z = 0
 
-    if (particle.position.y < -10) {
-      particle.position.set(rand(-1000, 1000), rand(2000, 3000), 0)
+    // PUT OBJECT BACK IN STORM
+    if (
+      gem.position.y < -10 ||
+      gem.position.x > 1000 ||
+      gem.position.x < -1000
+    ) {
+      gem.position.set(rand(-1000, 1000), rand(1000, 2000), 0)
+      gem.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
     }
   })
 }
 
+// MOVE BACKGROUND GRID
 function updateGrid() {
   gridX.forEach(line => {
     if (line.position.y > 2000) {
