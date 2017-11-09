@@ -1,7 +1,8 @@
 import * as THREE from "three";
 import * as CANNON from "cannon";
 require("./OBJLoader.js")(THREE);
-// require("./cannondebugrenderer.js")(THREE);
+require("./cannondebugrenderer.js")(THREE, CANNON);
+
 const mesh2shape = require("three-to-cannon");
 import THREEx from "./threex.keyboardstate";
 
@@ -17,46 +18,50 @@ var world,
   material2,
   mesh,
   mesh2,
-  b1;
+  b1,
+  shotBody;
 
 let updateFns = [];
 let cannonParticles = [];
 let threeParticles = [];
+let smokeParticles = [];
 let initMeteorPos = [];
 let score = 0;
 var timeStep = 1 / 60;
+var regDetection = false;
+var shots = [];
 
-// initThree();
+initThree();
 initCannon();
+smoke();
+displayShotsLeft();
+setInterval(displayShotsLeft, 1000 * 10);
+function initThree() {
+  scene = new THREE.Scene();
 
-// function initThree() {
-scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(
+    75,
+    window.innerWidth / window.innerHeight,
+    0.1,
+    2000
+  );
+  camera.position.set(0, -70, 100);
+  camera.rotation.set(20, 0, 0);
 
-// var gridHelper = new THREE.GridHelper(1000, 100, 0x00ff00, 0x00ff00);
-// scene.add(gridHelper);
+  scene.add(camera);
+  // SET LIGHTING FOR THE SCENE
+  const pointLight = new THREE.PointLight(0xffffff);
+  pointLight.position.set(10, 50, 130);
+  scene.add(pointLight);
 
-camera = new THREE.PerspectiveCamera(
-  75,
-  window.innerWidth / window.innerHeight,
-  0.1,
-  2000
-);
-camera.position.set(0, -70, 100);
-camera.rotation.set(20, 0, 0);
+  const ambientLight = new THREE.AmbientLight(0xf0f0f0, 0.3);
+  scene.add(ambientLight);
 
-scene.add(camera);
-// SET LIGHTING FOR THE SCENE
-const pointLight = new THREE.PointLight(0xffffff);
-pointLight.position.set(10, 50, 130);
-scene.add(pointLight);
-
-const ambientLight = new THREE.AmbientLight(0xf0f0f0, 0.3);
-scene.add(ambientLight);
-
-renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000);
-document.body.appendChild(renderer.domElement);
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x000000);
+  document.body.appendChild(renderer.domElement);
+} //end of init three function
 
 // GRID
 let ackY = 0;
@@ -64,8 +69,7 @@ let ackX = -1000;
 let gridX = [];
 for (var i = 0; i < 40; i++) {
   var lineMaterial = new THREE.LineBasicMaterial({
-    color: 0x4ef7da,
-    blending: THREE.AdditiveBlending
+    color: 0x4ef7da
   });
 
   var lineXGeometry = new THREE.Geometry();
@@ -73,7 +77,7 @@ for (var i = 0; i < 40; i++) {
   lineXGeometry.vertices.push(new THREE.Vector3(1000, 0, -30));
 
   var lineX = new THREE.Line(lineXGeometry, lineMaterial);
-  console.log(lineX);
+
   lineX.position.y = ackY;
   ackY += 100;
   gridX.push(lineX);
@@ -92,7 +96,7 @@ for (var i = 0; i < 40; i++) {
 }
 
 // INITIALIZE CANNON DEBUG RENDERER
-// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new THREEx.KeyboardState(renderer.domElement);
 renderer.domElement.setAttribute("tabIndex", "0");
@@ -101,8 +105,9 @@ renderer.domElement.focus();
 //////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////////////////////////////
-
-// } //end of init three function
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
 
 function initCannon() {
   world = new CANNON.World();
@@ -110,30 +115,14 @@ function initCannon() {
   world.broadphase = new CANNON.NaiveBroadphase();
   world.solver.iterations = 10;
 
-  shape = new CANNON.Box(new CANNON.Vec3(5, 5, 5));
+  // CREATE METEOR BODIES
+  var boxShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10));
 
-  mass = 1;
-  body = new CANNON.Body({
-    mass: 1
-  });
-  body.addShape(shape);
-  body.position.set(0, -2, 0);
-  body.velocity.set(0, 0, 0);
-  body.angularVelocity.set(5, 10, 1);
-  body.angularDamping = 0.5;
-  world.addBody(body);
-
-  function rand(min, max) {
-    return Math.random() * (max - min) + min;
-  }
-  var boxShape = new CANNON.Box(new CANNON.Vec3(20, 20, 20));
-
-  for (var i = 0; i < 20; i++) {
-    b1 = new CANNON.Body({ mass: 5, linearFactor: new CANNON.Vec3(0, 1, 0) });
+  for (var i = 0; i < 100; i++) {
+    b1 = new CANNON.Body({ mass: 5, linearFactor: new CANNON.Vec3(1, 1, 1) });
     b1.addShape(boxShape);
 
     initMeteorPos.push(rand(-3, -1));
-    b1.velocity.set(0, 0, 0);
     b1.position.set(rand(-1000, 1000), rand(500, 2000), 0);
     b1.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0);
     b1.linearDamping = 0;
@@ -165,32 +154,60 @@ loader.load(
     object.rotation.z = 3.13;
     object.position.x = 0;
     object.position.y = 10;
+
     const shipNewMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
     const shipBoundingBoxMaterial = new THREE.MeshBasicMaterial({
       color: 0xff00ff
     });
 
     object.children[0].material = shipNewMaterial;
-    const cannonShip = mesh2shape(object, { type: mesh2shape.Type.BOX });
+
+    const cannonShip = mesh2shape(object, { type: mesh2shape.Type.SPHERE });
+    cannonShip.radius = 15;
     console.log(cannonShip);
     const shipBody = new CANNON.Body({
-      mass: 2000
+      mass: 0
     });
     shipBody.addShape(cannonShip);
     world.addBody(shipBody);
 
-    shipBody.shapes[0].material = shipBoundingBoxMaterial;
-
     shipBody.addEventListener("collide", e => {
-      console.log(e);
-      console.log("skeppet krockade");
-      object.children[0].material.color.set(0x00ff00);
-      score += 1;
-      e.target.position.x = 10;
-      console.log(score);
+      regDetection = true;
+      if (regDetection) {
+        console.log("skeppet krockade");
+        object.children[0].material.color.set(0x00ff00);
+        score += 1;
+        console.log(score);
+      }
+      console.log(regDetection);
     });
 
+    // SHOOTING
+
+    window.addEventListener("keydown", e => {
+      if (e.keyCode === 32 && shots.length > 0) {
+        console.log("hej");
+        var gunShot = new CANNON.Box(new CANNON.Vec3(10, 10, 10));
+
+        shotBody = new CANNON.Body({
+          mass: 20,
+          linearFactor: new CANNON.Vec3(1, 1, 1)
+        });
+        shotBody.addShape(gunShot);
+
+        world.addBody(shotBody);
+        shotBody.position.copy(shipBody.position);
+        shots.pop().visible = false;
+      }
+    });
+
+    // END SHOOTING
+
     updateFns.push(() => {
+      if (shotBody !== undefined) {
+        shotBody.position.y += 3;
+      }
+
       //////////////////////////////////////////////////////////////////////////////////
       //		MOVE SPACESHIP								//
       //////////////////////////////////////////////////////////////////////////////////
@@ -225,6 +242,7 @@ loader.load(
       // }
 
       object.position.copy(shipBody.position);
+
       // object.rotation.copy(shipBody.rotation);
     });
 
@@ -239,6 +257,23 @@ loader.load(
     console.log("An error happened");
   }
 );
+
+function displayShotsLeft() {
+  //CREATE SHOTS
+
+  var displayShotGeometry = new THREE.BoxGeometry(5, 5, 5);
+  var displayShotMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+
+  var incrementPos = 0;
+  for (var i = 0; i < 10; i++) {
+    var cube = new THREE.Mesh(displayShotGeometry, displayShotMaterial);
+    cube.position.set(10 + incrementPos, 5, 110);
+    incrementPos += 7;
+    shots.push(cube);
+    scene.add(cube);
+  }
+}
+
 // CREATE THREE PARTICLES
 geometry = new THREE.BoxGeometry(20, 20, 20);
 material = new THREE.MeshLambertMaterial({ color: 0xff00ff });
@@ -252,8 +287,9 @@ cannonParticles.forEach(particle => {
 function animate() {
   requestAnimationFrame(animate);
   updatePhysics();
-  // cannonDebugRenderer.update();
+  cannonDebugRenderer.update();
   updateGrid();
+  evolveSmoke();
   render();
 
   updateFns.forEach(fn => {
@@ -273,19 +309,89 @@ function updatePhysics() {
     threeParticles[index].quaternion.copy(particle.quaternion);
     // particle.position.x -= 0.3;
     particle.position.y += initMeteorPos[index];
+    particle.position.z = 0;
+    if (
+      particle.position.y < -50 ||
+      particle.position.x < -1000 ||
+      particle.position.x > 1000
+    ) {
+      particle.position.set(rand(-1000, 1000), rand(500, 2000), 0);
+      particle.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0);
+    }
   });
 }
-console.log(gridX);
-console.log(gridY);
+
 function updateGrid() {
   gridX.forEach(line => {
-    if (line.position.y > 2000) {
-      line.position.y = 0;
+    if (line.position.y < 0) {
+      line.position.y = 2000;
     }
-    line.position.y += 2;
+    line.position.y -= 2;
   });
 }
 
 function render() {
   renderer.render(scene, camera);
+}
+
+// SMOKE
+function smoke() {
+  const geometry = new THREE.CubeGeometry(200, 200, 200);
+  const material = new THREE.MeshLambertMaterial({
+    color: 0xaa6666,
+    wireframe: false
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  //scene.add( mesh );
+  let cubeSineDriver = 0;
+
+  // let textGeo = new THREE.PlaneGeometry(300, 300);
+  THREE.ImageUtils.crossOrigin = ""; //Need this to pull in crossdomain images from AWS
+  // let textTexture = THREE.ImageUtils.loadTexture(
+  //   "https://s3-us-west-2.amazonaws.com/s.cdpn.io/95637/quickText.png"
+  // );
+  // let textMaterial = new THREE.MeshLambertMaterial({
+  //   color: 0x00ffff,
+  //   opacity: 1,
+  //   map: textTexture,
+  //   transparent: true,
+  //   blending: THREE.AdditiveBlending
+  // });
+  // let text = new THREE.Mesh(textGeo, textMaterial);
+  // text.position.z = 800;
+  // scene.add(text);
+
+  let light = new THREE.DirectionalLight(0xffffff, 0.5);
+  light.position.set(-1, 0, 1);
+  scene.add(light);
+
+  let smokeTexture = THREE.ImageUtils.loadTexture(
+    "https://s3-us-west-2.amazonaws.com/s.cdpn.io/95637/Smoke-Element.png"
+  );
+  let smokeMaterial = new THREE.MeshLambertMaterial({
+    color: 0x00dddd,
+    map: smokeTexture,
+    transparent: true
+  });
+  let smokeGeo = new THREE.PlaneGeometry(700, 700);
+  console.log(smokeGeo);
+
+  for (var p = 0; p < 5; p++) {
+    var particle = new THREE.Mesh(smokeGeo, smokeMaterial);
+    particle.position.set(
+      Math.random() * 500 - 250,
+      Math.random() * 500 - 250,
+      rand(-1000, 0)
+    );
+    particle.rotation.z = Math.random() * 360;
+    scene.add(particle);
+    smokeParticles.push(particle);
+  }
+}
+
+function evolveSmoke() {
+  var sp = smokeParticles.length;
+  while (sp--) {
+    // smokeParticles[sp].rotation.z += 0.002;
+  }
 }
