@@ -1,22 +1,24 @@
 // TODO
 // - Skeppet ska inte kunna åka utanför skärmen
-// - Rotation på meteorer
-// - Tilt på skeppet
+// ✓ Rotation på meteorer
+// ✓ Tilt på skeppet
 // - Använda modeller för meteorer
-// - Endast ett collide-event per krock!
+// ✓ Endast ett collide-event per krock!
 // - Intro
 // - Outro efter game over
 // - Explodera meteorer
 // - Explodera skepp
 // - Shield/glow på skepp
-// - Håll kvar meteorer på z-axeln
+// ✓ Håll kvar meteorer på z-axeln
+// - Pause?
+// - Remove & dispose explosion pieces
+// - Clean!
 
 import * as THREE from 'three'
 import * as CANNON from 'cannon'
 import * as Howler from 'howler'
 require('./cannondebugrenderer.js')(THREE, CANNON)
 require('./OBJLoader.js')(THREE)
-// require("./cannondebugrenderer.js")(THREE);
 const mesh2shape = require('three-to-cannon')
 import THREEx from './threex.keyboardstate'
 
@@ -114,9 +116,6 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000)
 document.body.appendChild(renderer.domElement)
 
-// INITIALIZE CANNON DEBUG RENDERER
-var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
-
 // CREATE BACKGROUND GRID
 let ackY = 0
 let ackX = -1000
@@ -151,12 +150,48 @@ for (var i = 0; i < 40; i++) {
 }
 
 // INITIALIZE CANNON DEBUG RENDERER
-// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
+var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
 
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new THREEx.KeyboardState(renderer.domElement)
 renderer.domElement.setAttribute('tabIndex', '0')
 renderer.domElement.focus()
+
+// EXPLOSION
+let explosion = new THREE.Group()
+let explosionPieces = []
+const explosionPiecesMaterial = new THREE.MeshLambertMaterial({
+  color: 0xffffff
+})
+
+const explosionPiecesGeometry = new THREE.TetrahedronGeometry(2)
+
+// PLACE EXPLOSION IN FRONT OF SHIP
+const explode = function(explosionPos) {
+  for (let i = 0; i < 100; i++) {
+    explosionPieces[i] = new THREE.Mesh(
+      explosionPiecesGeometry,
+      explosionPiecesMaterial,
+      0
+    )
+
+    explosionPieces[i].position.set(explosionPos.x, explosionPos.y + 30, 0)
+    explosionPieces[i].rotationValueX = rand(-0.2, 0.2)
+    explosionPieces[i].rotationValueY = rand(-0.2, 0.2)
+    explosionPieces[i].velocity = new THREE.Vector3(
+      rand(-2, 2),
+      rand(-2, 1),
+      rand(-2, 2)
+    )
+    explosion.add(explosionPieces[i])
+  }
+  scene.add(explosion)
+
+  // setTimeout(function() {
+  //   console.log('hej')
+  //   scene.remove(explosion)
+  // }, 5000)
+}
 
 // CREATE CANNON.JS WORLD
 function initCannon() {
@@ -170,8 +205,8 @@ function initCannon() {
 
   for (var i = 0; i < 100; i++) {
     cannonMeteor = new CANNON.Body({
-      mass: 5,
-      linearFactor: new CANNON.Vec3(0, 0, 0)
+      mass: 5
+      // linearFactor: new CANNON.Vec3(0, 0, 0)
       // angularFactor: new CANNON.Vec3(0, 0, 0)
     })
     cannonMeteor.addShape(meteorShape)
@@ -229,14 +264,14 @@ cannonGems.forEach(gem => {
 })
 
 // CREATE SHIP
-// instantiate a loader
+// INSTANTIATE A LOADER
 var loader = new THREE.OBJLoader()
 
-// load a resource
+// LOAD A RESOURCE
 loader.load(
-  // resource URL
+  // RESOURCE URL
   'spaceship.obj',
-  // called when resource is loaded
+  // CALLED WHEN RESOURCE IS LOADED
   function(threeShip) {
     threeShip.scale.set(0.05, 0.05, 0.05)
     threeShip.rotation.x = 6.3
@@ -247,7 +282,6 @@ loader.load(
 
     const cannonShip = mesh2shape(threeShip, { type: mesh2shape.Type.SPHERE })
     cannonShip.radius = 10
-    console.log(cannonShip)
     const shipBody = new CANNON.Body()
     shipBody.addShape(cannonShip)
     shipBody.position.y = 10
@@ -260,13 +294,15 @@ loader.load(
 
       if (e.body.name === 'Meteor') {
         if (lives >= 0) {
+          // console.log(e.target.position)
           lives--
+          explode(e.target.position)
           crashSound.play()
           // e.body.velocity.set(-500, 500, 500)
           e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0)
         }
 
-        if (lives === -1) {
+        if (lives === 0) {
           gameOver(shipBody, threeShip)
         }
       }
@@ -283,7 +319,7 @@ loader.load(
       // MOVE SPACESHIP                    //
       ///////////////////////////////////////
       //MOVE TO THE LEFT
-      if (keyboard.pressed('left')) {
+      if (keyboard.pressed('left') && shipBody.position.x > -150) {
         shipBody.position.x -= 4
 
         // // TILT LEFT
@@ -292,21 +328,20 @@ loader.load(
           // * delta;
         }
         // MOVE TO THE RIGHT
-      } else if (keyboard.pressed('right')) {
+      } else if (keyboard.pressed('right') && shipBody.position.x < 150) {
         shipBody.position.x += 4
 
         // TILT RIGHT
         if (threeShip.rotation.y < 1) {
           threeShip.rotation.y += 0.1
           // * delta;
-        } else if (keyboard.pressed('up')) {
-          shipBody.position.y += 4
-        } else if (keyboard.pressed('down') && shipBody.position.y > 10) {
-          shipBody.position.y -= 4
         }
-
-        // RESET LEFT TILT ON KEY UP
+      } else if (keyboard.pressed('up') && shipBody.position.y < 100) {
+        shipBody.position.y += 4
+      } else if (keyboard.pressed('down') && shipBody.position.y > 10) {
+        shipBody.position.y -= 4
       } else if (threeShip.rotation.y > 0.5) {
+        // RESET LEFT TILT ON KEY UP
         threeShip.rotation.y -= 0.1
         // * delta
         // RESET RIGHT TILT ON KEY UP
@@ -322,11 +357,11 @@ loader.load(
 
     scene.add(threeShip)
   },
-  // called when loading is in progresses
+  // CALLED WHEN LOADING IS IN PROGRESSES
   function(xhr) {
     console.log(xhr.loaded / xhr.total * 100 + '% loaded')
   },
-  // called when loading has errors
+  // CALLED WHEN LOADING HAS ERRORS
   function(error) {
     console.log('An error happened')
   }
@@ -337,6 +372,7 @@ function animate() {
   updatePhysics()
   cannonDebugRenderer.update()
   updateGrid()
+  updateExplosions()
   render()
 
   updateFns.forEach(fn => {
@@ -354,7 +390,7 @@ animate()
 function updatePhysics() {
   cannonDebugRenderer.update()
 
-  // Step the physics world
+  // STEP THE PHYSICS WORLD
   world.step(timeStep)
 
   // COPY COORDINATES FROM CANNON.JS TO THREE.JS
@@ -365,6 +401,7 @@ function updatePhysics() {
 
     threeMeteors[index].quaternion.copy(meteor.quaternion)
 
+    // PUT OBJECT BACK IN STORM
     if (
       meteor.position.y < -10 ||
       meteor.position.x > 1000 ||
@@ -391,6 +428,21 @@ function updatePhysics() {
       gem.velocity.set(rand(-0.3, 0.3), rand(-300, 100), 0)
     }
   })
+}
+
+// EXPLOSION
+function updateExplosions() {
+  explosion.children.forEach(child => {
+    child.rotation.x += child.rotationValueX
+    child.rotation.y += child.rotationValueY
+    child.position.y -= child.velocity.y
+    child.position.x -= child.velocity.x
+    child.position.z -= child.velocity.z
+  })
+}
+
+if (scene.getObjectByName('Explosion')) {
+  console.log('hej')
 }
 
 // MOVE BACKGROUND GRID
