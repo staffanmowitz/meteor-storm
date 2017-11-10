@@ -218,6 +218,11 @@ function initCannon() {
 
     cannonMeteor.name = 'Meteor'
 
+    cannonMeteor.applyLocalImpulse(
+      new CANNON.Vec3(rand(-50, 50), rand(-50, 50), rand(-50, 50)),
+      new CANNON.Vec3(rand(-30, 30), rand(-30, 30), rand(-30, 30))
+    )
+
     world.addBody(cannonMeteor)
     cannonMeteors.push(cannonMeteor)
   }
