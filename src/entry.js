@@ -49,6 +49,7 @@ let bonus = 0
 let lives = 5
 
 // ADD SOUND EFFECTS
+const laserSound = new Howl({ src: 'laser.wav' })
 const bonusSound = new Howl({ src: 'bonus.wav' })
 const lifeSound = new Howl({ src: 'life.wav' })
 const crashSound = new Howl({ src: 'crash.wav' })
