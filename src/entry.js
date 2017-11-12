@@ -23,10 +23,10 @@
 import * as THREE from 'three'
 import * as CANNON from 'cannon'
 import * as Howler from 'howler'
+import mesh2shape from 'three-to-cannon'
 import THREEx from './threex.js'
-// require('./cannondebugrenderer.js')(THREE, CANNON)
 require('./OBJLoader.js')(THREE)
-const mesh2shape = require('three-to-cannon')
+// require('./cannondebugrenderer.js')(THREE, CANNON)
 
 function rand(min, max) {
   return Math.random() * (max - min) + min
@@ -41,7 +41,7 @@ let updateFns = []
 let cannonStorm = []
 let threeStorm = []
 
-let initMeteorPos = []
+let initParticlePos = []
 var timeStep = 1 / 60
 
 let score = 0
@@ -238,7 +238,7 @@ function makeStormParticles(
     cannonStormParticle.name = name
 
     // PLACE STORM PARTICLES RANDOMLY ON CANVAS AND GIVE THEM RANDOM VELOCITY
-    initMeteorPos.push(rand(speed[0], speed[1]))
+    initParticlePos.push(rand(speed[0], speed[1]))
     cannonStormParticle.position.set(
       rand(positionX[0], positionX[1]),
       rand(positionY[0], positionY[1]),
@@ -529,7 +529,7 @@ function updatePhysics() {
   // COPY COORDINATES FROM CANNON.JS TO THREE.JS
   cannonStorm.forEach((particle, index) => {
     threeStorm[index].position.copy(particle.position)
-    particle.position.y += initMeteorPos[index] - score / 750
+    particle.position.y += initParticlePos[index] - score / 750
 
     // STOP PARTICLE FROM MOVING ON Z-AXIS
     particle.position.z = 0
