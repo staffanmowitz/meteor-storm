@@ -19,7 +19,8 @@ var world,
   mesh,
   mesh2,
   b1,
-  shotBody;
+  shotBody,
+  threeShotMesh;
 
 let updateFns = [];
 let cannonParticles = [];
@@ -29,13 +30,31 @@ let initMeteorPos = [];
 let score = 0;
 var timeStep = 1 / 60;
 var regDetection = false;
-var shots = [];
+var displayShots = [];
+var threeShots = [];
+var cannonShots = [];
+var shootCount = 0;
 
+// FILTER GROUPS
+var SHIP = 1;
+var METEORS = 2;
+var SHOTS = 3;
+
+var array = ["banan", "bulle", "balle"];
+console.log(array);
+array.splice(1, 1);
+
+console.log(array);
 initThree();
 initCannon();
 smoke();
 displayShotsLeft();
-setInterval(displayShotsLeft, 1000 * 10);
+setInterval(() => {
+  displayShots.forEach(shot => {
+    shot.visible = true;
+  });
+  shootCount = 0;
+}, 1000 * 1);
 function initThree() {
   scene = new THREE.Scene();
 
@@ -59,7 +78,7 @@ function initThree() {
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x000000);
+  renderer.setClearColor(0x1c1c1c);
   document.body.appendChild(renderer.domElement);
 } //end of init three function
 
@@ -118,8 +137,13 @@ function initCannon() {
   // CREATE METEOR BODIES
   var boxShape = new CANNON.Box(new CANNON.Vec3(10, 10, 10));
 
-  for (var i = 0; i < 100; i++) {
-    b1 = new CANNON.Body({ mass: 5, linearFactor: new CANNON.Vec3(1, 1, 1) });
+  for (var i = 0; i < 50; i++) {
+    b1 = new CANNON.Body({
+      mass: 5,
+      linearFactor: new CANNON.Vec3(1, 1, 1),
+      collisionFilterGroup: METEORS,
+      collisionFilterMask: SHOTS
+    });
     b1.addShape(boxShape);
 
     initMeteorPos.push(rand(-3, -1));
@@ -132,7 +156,6 @@ function initCannon() {
     q2.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI * 0.25);
     var q = q1.mult(q2);
     b1.quaternion.set(q.x, q.y, q.z, q.w);
-    // b1.quaternion.set(q.x, q.y, q.z, q.w);
 
     world.addBody(b1);
     cannonParticles.push(b1);
@@ -166,7 +189,9 @@ loader.load(
     cannonShip.radius = 15;
     console.log(cannonShip);
     const shipBody = new CANNON.Body({
-      mass: 0
+      mass: 0,
+      collisionFilterGroup: SHIP,
+      collisionFilterMask: METEORS
     });
     shipBody.addShape(cannonShip);
     world.addBody(shipBody);
@@ -174,47 +199,99 @@ loader.load(
     shipBody.addEventListener("collide", e => {
       regDetection = true;
       if (regDetection) {
-        console.log("skeppet krockade");
-        object.children[0].material.color.set(0x00ff00);
+        // console.log("skeppet krockade");
+
         score += 1;
-        console.log(score);
       }
-      console.log(regDetection);
     });
 
     // SHOOTING
-
+    var fired = false;
     window.addEventListener("keydown", e => {
-      if (e.keyCode === 32 && shots.length > 0) {
-        console.log("hej");
-        var gunShot = new CANNON.Box(new CANNON.Vec3(10, 10, 10));
+      if (!fired && e.keyCode === 32 && shootCount < 10) {
+        fired = true;
 
-        shotBody = new CANNON.Body({
-          mass: 20,
-          linearFactor: new CANNON.Vec3(1, 1, 1)
-        });
-        shotBody.addShape(gunShot);
+        // CREATE CANNON SHOT
 
-        world.addBody(shotBody);
-        shotBody.position.copy(shipBody.position);
-        shots.pop().visible = false;
+        var gunShot = new CANNON.Cylinder(1, 1, 25, 32);
+        var threeShotGroup = new THREE.Group();
+        var cannonShotGroup = {};
+        cannonShotGroup.children = [];
+
+        for (var i = 0; i < 2; i++) {
+          shotBody = new CANNON.Body({
+            mass: 5,
+            linearFactor: new CANNON.Vec3(1, 1, 1),
+            collisionFilterGroup: SHOTS,
+            collisionFilterMask: METEORS
+          });
+
+          if (i === 0) {
+            shotBody.position.x = shipBody.position.x - 2.5;
+          } else {
+            shotBody.position.x = shipBody.position.x + 2.5;
+          }
+
+          shotBody.position.y = shipBody.position.y + 25;
+          shotBody.position.z = shipBody.position.z;
+          shotBody.velocity.set(0, 500, 0);
+          shotBody.addShape(gunShot);
+          cannonShotGroup.children.push(shotBody);
+          world.addBody(shotBody);
+
+          shotBody.addEventListener("collide", e => {
+            var currentCube = e.body;
+
+            currentCube.position.set(rand(-1000, 1000), rand(500, 2000), 0);
+
+            threeShots.forEach((shot, index) => {
+              scene.remove(shot);
+              world.removeBody(cannonShots[index].children[0]);
+              world.removeBody(cannonShots[index].children[1]);
+              threeShots.splice(index, 1);
+
+              cannonShots.splice(index, 1);
+            });
+          });
+
+          // CREATE THREE SHOT
+
+          var threeShotGeometry = new THREE.CylinderGeometry(1, 1, 25, 32);
+
+          threeShotMesh = new THREE.Mesh(
+            threeShotGeometry,
+            new THREE.MeshLambertMaterial({ color: 0xf6ef71 })
+          );
+          threeShotMesh.position.copy(shotBody.position);
+          threeShotGroup.add(threeShotMesh);
+        }
+        scene.add(threeShotGroup);
+        threeShots.push(threeShotGroup);
+        cannonShots.push(cannonShotGroup);
+
+        //UPDATE SHOTS LEFT DISPLAY
+        displayShots[displayShots.length - 1 - shootCount].visible = false;
+
+        if (shootCount < 10) {
+          shootCount++;
+        }
       }
+
+      window.addEventListener("keyup", e => {
+        fired = false;
+      });
     });
 
     // END SHOOTING
 
     updateFns.push(() => {
-      if (shotBody !== undefined) {
-        shotBody.position.y += 3;
-      }
-
+      // console.log(threeShots);
       //////////////////////////////////////////////////////////////////////////////////
       //		MOVE SPACESHIP								//
       //////////////////////////////////////////////////////////////////////////////////
       //MOVE TO THE LEFT
       if (keyboard.pressed("left")) {
         shipBody.position.x -= 3;
-
         // // TILT LEFT
         // if (shipBody.rotation.y > -1) {
         //   shipBody.rotation.y -= 2 * delta;
@@ -222,7 +299,6 @@ loader.load(
         // MOVE TO THE RIGHT
       } else if (keyboard.pressed("right")) {
         shipBody.position.x += 3;
-
         // TILT RIGHT
         // if (shipBody.rotation.y < 1) {
         //   shipBody.rotation.y += 2 * delta;
@@ -243,6 +319,32 @@ loader.load(
 
       object.position.copy(shipBody.position);
 
+      // FADE AND REMOVE SHOT
+
+      if (shotBody) {
+        threeShots.forEach((shot, index) => {
+          var shotNum = index;
+          shot.position.y = cannonShots[index].children[0].position.y;
+          if (shot.position.y > 200) {
+            shot.children[0].material.transparent = true;
+            shot.children[1].material.transparent = true;
+            shot.children[0].material.opacity -= 0.05;
+            shot.children[1].material.opacity -= 0.05;
+
+            if (shot.children[1].material.opacity < 0.1) {
+              scene.remove(shot);
+
+              console.log(cannonShots);
+              world.removeBody(cannonShots[index].children[0]);
+              world.removeBody(cannonShots[index].children[1]);
+
+              threeShots.splice(index, 1);
+              cannonShots.splice(index, 1);
+            }
+          }
+        });
+      }
+
       // object.rotation.copy(shipBody.rotation);
     });
 
@@ -250,11 +352,11 @@ loader.load(
   },
   // called when loading is in progresses
   function(xhr) {
-    console.log(xhr.loaded / xhr.total * 100 + "% loaded");
+    // console.log(xhr.loaded / xhr.total * 100 + "% loaded");
   },
   // called when loading has errors
   function(error) {
-    console.log("An error happened");
+    // console.log("An error happened");
   }
 );
 
@@ -262,21 +364,21 @@ function displayShotsLeft() {
   //CREATE SHOTS
 
   var displayShotGeometry = new THREE.BoxGeometry(5, 5, 5);
-  var displayShotMaterial = new THREE.MeshLambertMaterial({ color: 0x00ff00 });
+  var displayShotMaterial = new THREE.MeshLambertMaterial({ color: 0x4ef7da });
 
   var incrementPos = 0;
   for (var i = 0; i < 10; i++) {
     var cube = new THREE.Mesh(displayShotGeometry, displayShotMaterial);
     cube.position.set(10 + incrementPos, 5, 110);
     incrementPos += 7;
-    shots.push(cube);
+    displayShots.push(cube);
     scene.add(cube);
   }
 }
 
 // CREATE THREE PARTICLES
 geometry = new THREE.BoxGeometry(20, 20, 20);
-material = new THREE.MeshLambertMaterial({ color: 0xff00ff });
+material = new THREE.MeshLambertMaterial({ color: 0x4ef7da });
 
 cannonParticles.forEach(particle => {
   const cube = new THREE.Mesh(geometry, material);
@@ -287,7 +389,7 @@ cannonParticles.forEach(particle => {
 function animate() {
   requestAnimationFrame(animate);
   updatePhysics();
-  cannonDebugRenderer.update();
+  // cannonDebugRenderer.update();
   updateGrid();
   evolveSmoke();
   render();
@@ -374,7 +476,6 @@ function smoke() {
     transparent: true
   });
   let smokeGeo = new THREE.PlaneGeometry(700, 700);
-  console.log(smokeGeo);
 
   for (var p = 0; p < 5; p++) {
     var particle = new THREE.Mesh(smokeGeo, smokeMaterial);

@@ -15,7 +15,7 @@ var EXPLOSION = {};
 // varying: used to communicate data from vertex shader to fragment shader
 // uniform: data that is the same for each particle (such as texture)
 
-particleVertexShader = [
+fnparticleVertexShader = [
   "attribute vec3  customColor;",
   "attribute float customOpacity;",
   "attribute float customSize;",
