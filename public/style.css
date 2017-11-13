@@ -18,33 +18,85 @@ canvas {
   outline: none;
 }
 
-.score,
-.lives,
+p {
+  margin: 0;
+}
+
+.welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  top: 30%;
+  position: fixed;
+  text-align: center;
+  font-size: 96px;
+  transition: opacity 1s;
+}
+
+.play {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  height: 60px;
+  padding: 10px;
+  background: #000;
+  border: 1px solid #fff;
+  color: #4ef7da;
+  font-size: 50px;
+  cursor: pointer;
+}
+
+.hide {
+  opacity: 0;
+}
+
+.counters {
+  padding: 0 20px;
+  position: fixed;
+  top: 20px;
+  width: 100vw;
+  /*border: 1px solid yellow;*/
+  display: flex;
+  justify-content: space-between;
+}
+
+/*.counters,
 .game-over {
   text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00ff,
     0 0 35px #ff00ff, 0 0 40px #ff00ff, 0 0 50px #ff00ff, 0 0 75px #ff00ff;
-}
+}*/
 
 .score,
-.lives {
+.lives,
+.ammo {
+  width: 200px;
   font-size: 20px;
-  position: fixed;
+  /*position: fixed;*/
   top: 20px;
 }
 
 .score {
-  left: 20px;
+  text-align: left;
 }
 
 .lives {
-  right: 20px;
+  text-align: right;
+}
+
+.ammo {
+  text-align: center;
 }
 
 .game-over {
-  font-size: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  top: 30%;
   position: fixed;
-  top: 40%;
-  width: 100%;
+  text-align: center;
+  transition: opacity 1s;
+  font-size: 36px;
   text-align: center;
   z-index: 1;
 }
