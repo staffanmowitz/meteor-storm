@@ -136,11 +136,9 @@ function gameOver(shipBody, threeShip) {
     gameOverContainer.classList.remove('hide')
   }, 100)
 
-  counterContainer.classList.add('hide')
+  stopReload()
 
-  displayShots.forEach(shot => {
-    shot.visible = false
-  })
+  counterContainer.classList.add('hide')
 
   scoreText.nodeValue = `Your Score: ${score + bonus}`
 
@@ -167,14 +165,7 @@ function gameStart(shipBody, threeShip, shipShield) {
 
       counterContainer.classList.remove('hide')
 
-      displayShotsLeft()
-
-      setInterval(() => {
-        displayShots.forEach(shot => {
-          shot.visible = true
-        })
-        shootCount = 0
-      }, 1000 * 10)
+      startReload()
 
       if (!scene.getObjectByName('Ship')) {
         world.addBody(shipBody)
@@ -340,14 +331,33 @@ renderer.setClearColor(0x000000)
 document.body.appendChild(renderer.domElement)
 
 // ADD SHOT COUNTER
-// displayShotsLeft()
-//
-// setInterval(() => {
-//   displayShots.forEach(shot => {
-//     shot.visible = true
-//   })
-//   shootCount = 0
-// }, 1000 * 10)
+
+displayShotsLeft()
+displayShots.forEach(shot => {
+  shot.visible = false
+})
+
+let reload
+
+function startReload() {
+  displayShots.forEach(shot => {
+    shot.visible = true
+  })
+  reload = window.setInterval(() => {
+    displayShots.forEach(shot => {
+      shot.visible = true
+    })
+    shootCount = 0
+  }, 1000 * 10)
+}
+
+function stopReload() {
+  window.clearInterval(reload)
+  displayShots.forEach(shot => {
+    shot.visible = false
+    shootCount = 0
+  })
+}
 
 function displayShotsLeft() {
   const displayShotGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2)
@@ -653,7 +663,7 @@ loader.load(
       }
 
       if (lives === 0) {
-        gameOver(shipBody, threeShip, shipShield)
+        gameOver(shipBody, threeShip)
       }
     })
 
