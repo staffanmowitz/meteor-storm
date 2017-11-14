@@ -4,7 +4,7 @@
 
 1. Clone or download repo
 2. Run `npm install` to install dependencies
-3. Start dev server with `npm start` or build project with `npm build`
+3. Start dev server with `npm start` or build project with `npm run build`
 
 ## Acknowledgements
 
