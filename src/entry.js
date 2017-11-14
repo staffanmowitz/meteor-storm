@@ -98,7 +98,7 @@ addCounter('lives', 'Shield', lives)
 
 // ADD GAME OVER SCREEN
 const gameOverContainer = document.createElement('div')
-gameOverContainer.classList.add('game-over', 'hide')
+gameOverContainer.classList.add('game-over', 'remove')
 document.body.appendChild(gameOverContainer)
 
 const playAgainContainer = document.createElement('div')
@@ -130,7 +130,11 @@ function gameOver(shipBody, threeShip) {
   music.fade(0.5, 0, 1000)
   countScore = false
 
-  gameOverContainer.classList.remove('hide')
+  gameOverContainer.classList.remove('remove')
+  setTimeout(() => {
+    gameOverContainer.classList.remove('hide')
+  }, 100)
+
   scoreText.nodeValue = `Your Score: ${score + bonus}`
 
   introDone = false
@@ -144,7 +148,14 @@ function gameStart(shipBody, threeShip, shipShield) {
   playButtons.forEach(playButton =>
     playButton.addEventListener('click', e => {
       welcomeContainer.classList.add('hide')
+      setTimeout(() => {
+        welcomeContainer.classList.add('remove')
+      }, 1000)
+
       gameOverContainer.classList.add('hide')
+      setTimeout(() => {
+        gameOverContainer.classList.add('remove')
+      }, 1000)
 
       renderer.domElement.focus()
 

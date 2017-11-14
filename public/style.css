@@ -51,7 +51,8 @@ p {
   opacity: 0;
 }
 
-.remove {
+.welcome.remove,
+.game-over.remove {
   display: none;
 }
 
@@ -60,7 +61,6 @@ p {
   position: fixed;
   top: 20px;
   width: 100vw;
-  /*border: 1px solid yellow;*/
   display: flex;
   justify-content: space-between;
 }
@@ -72,11 +72,9 @@ p {
 }*/
 
 .score,
-.lives,
-.ammo {
+.lives {
   width: 200px;
   font-size: 20px;
-  /*position: fixed;*/
   top: 20px;
 }
 
@@ -86,10 +84,6 @@ p {
 
 .lives {
   text-align: right;
-}
-
-.ammo {
-  text-align: center;
 }
 
 .game-over {
