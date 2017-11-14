@@ -158,8 +158,6 @@ function gameOver(shipBody, threeShip) {
   music.fade(0.5, 0, 1000)
   countScore = false
 
-  console.log(score)
-
   gameOverContainer.classList.remove('hide')
   scoreText.nodeValue = `Your Score: ${score}`
 
@@ -178,8 +176,6 @@ function gameStart(shipBody, threeShip, shipShield) {
 
       renderer.domElement.focus()
 
-      console.log(scene)
-
       if (!scene.getObjectByName('Ship')) {
         world.addBody(shipBody)
         scene.add(threeShip)
@@ -188,9 +184,11 @@ function gameStart(shipBody, threeShip, shipShield) {
         score = 0
         lives = 6
 
-        shipBody.position.y = -100
-        threeShip.position.y = -100
-        shipShield.position.y = -100
+        shipBody.position.set(0, -100, 0)
+        threeShip.position.set(0, -100, 0)
+        shipShield.position.set(0, -100, 0)
+
+        shipShield.material.uniforms.glowColor.value.set(0xffea37)
       }
 
       // CREATE 100 CANNON.JS METEORS
@@ -242,7 +240,6 @@ function gameStart(shipBody, threeShip, shipShield) {
       })
 
       cannonStorm.forEach(particle => {
-        // console.log(particle)
         let particleMesh
 
         if (particle.name === 'Meteor') {
@@ -484,17 +481,12 @@ function makeStormParticles(
     )
   }
 
-  // console.log(cannonStorm)
-  // let test =
-  //   cannonStorm.find(particle => particle.name === 'Meteor') !== undefined
-  // console.log(test)
-
   if (
     particleStatus.meteors === false ||
     particleStatus.gems === false ||
     particleStatus.extraLives === false
   ) {
-    console.log('apa')
+    console.log('New particles')
 
     switch (shape) {
       case 'meteor':
@@ -530,7 +522,7 @@ function makeStormParticles(
       cannonStorm.push(cannonStormParticle)
     }
   } else {
-    console.log('bajs')
+    console.log('Old particles')
     cannonStorm.forEach(cannonStormParticle => {
       placeParticles(cannonStormParticle)
     })
