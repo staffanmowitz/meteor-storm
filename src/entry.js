@@ -185,7 +185,7 @@ function gameStart(shipBody, threeShip, shipShield) {
         scene.add(threeShip)
         scene.add(shipShield)
 
-        // score = 0
+        score = 0
         lives = 6
 
         shipBody.position.y = -100
