@@ -49,11 +49,11 @@ const LIVES = 5
 
 // ADD SOUND EFFECTS
 const laserSound = new Howl({ src: 'laser.mp3' })
-const bonusSound = new Howl({ src: 'bonus.wav' })
-const lifeSound = new Howl({ src: 'life.wav' })
-const crashSound = new Howl({ src: 'crash.wav' })
-const dieSound = new Howl({ src: 'die.wav' })
-const meteorExplosionSound = new Howl({ src: 'crash.wav' })
+const bonusSound = new Howl({ src: 'bonus.mp3' })
+const lifeSound = new Howl({ src: 'life.mp3' })
+const crashSound = new Howl({ src: 'crash.mp3' })
+const dieSound = new Howl({ src: 'die.mp3' })
+const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' })
 const music = new Howl({ src: 'meteor_storm_theme.mp3' })
 
 music.play()
@@ -127,7 +127,6 @@ function gameOver(shipBody, threeShip) {
   dieSound.play()
   world.removeBody(shipBody)
   scene.remove(threeShip)
-  music.fade(0.5, 0, 1000)
   countScore = false
 
   gameOverContainer.classList.remove('remove')
