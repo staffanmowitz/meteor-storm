@@ -1,26 +1,3 @@
-// TODO
-// ✓ Skeppet ska inte kunna åka utanför skärmen
-// ✓ Tilt på skeppet
-// ✓ Shield/glow på skepp
-
-// ✓ Rotation på meteorer
-// - Använda modeller för meteorer
-// ✓ Endast ett collide-event per krock!
-// ✓ Håll kvar meteorer på z-axeln
-
-// ✓ Explodera meteorer
-// ✓ Explodera skepp
-// ✓ Remove & dispose explosion pieces
-// ✓ Skjuta sönder meteorer
-// ✓ Ta bort shoot event listener
-
-// - Intro
-// - Outro
-// - Pause?
-// ✓ Övre limit på svårighetsgrad (= hastighet)
-
-// - Code cleaning!
-
 import * as THREE from 'three'
 import * as CANNON from 'cannon'
 import * as Howler from 'howler'
@@ -40,9 +17,6 @@ let renderer
 let updateFns = []
 
 let cannonStorm = []
-// let cannonMeteors = []
-// let cannonGems = []
-// let cannonExtraLives = []
 
 let threeStorm = []
 
@@ -66,12 +40,6 @@ let shootCount = 0
 
 let introDone = false
 
-// let particleStatus = {
-//   metors: false,
-//   gems: false,
-//   extraLives: false
-// }
-
 // FILTER GROUPS
 const SHIP = 1
 const METEORS = 2
@@ -86,7 +54,7 @@ const lifeSound = new Howl({ src: 'life.wav' })
 const crashSound = new Howl({ src: 'crash.wav' })
 const dieSound = new Howl({ src: 'die.wav' })
 const meteorExplosionSound = new Howl({ src: 'crash.wav' })
-const music = new Howl({ src: 'meteor_storm_theme.mp3', volume: 0.3 })
+const music = new Howl({ src: 'meteor_storm_theme.mp3' })
 
 music.play()
 
@@ -163,7 +131,7 @@ function gameOver(shipBody, threeShip) {
   countScore = false
 
   gameOverContainer.classList.remove('hide')
-  scoreText.nodeValue = `Your Score: ${score}`
+  scoreText.nodeValue = `Your Score: ${score + bonus}`
 
   introDone = false
 }
@@ -200,6 +168,7 @@ function gameStart(shipBody, threeShip, shipShield) {
         shipShield.material.uniforms.glowColor.value.set(0xffea37)
       }
 
+      // CREATE STORM!
       if (cannonStorm.length === 0) {
         // CREATE 100 CANNON.JS METEORS
         makeStormParticles('meteor', 'Meteor')
@@ -225,8 +194,10 @@ function gameStart(shipBody, threeShip, shipShield) {
         )
       }
 
+      // PLACE METEORS IN SCENE
       placeStormParticles('Meteor')
 
+      // PLACE GEMS IN SCENE
       placeStormParticles(
         'Gem', // Name
         [-3, -1], // Speed
@@ -238,6 +209,7 @@ function gameStart(shipBody, threeShip, shipShield) {
         [-30, 30] // Impulse point
       )
 
+      // PLACE EXTRA LIVES IN SCENE
       placeStormParticles(
         'ExtraLife', // Name
         [-3, -1], // Speed
@@ -251,17 +223,17 @@ function gameStart(shipBody, threeShip, shipShield) {
 
       if (threeStorm.length === 0) {
         // CREATE THREE.JS STORM PARTICLES
-        const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
+        const meteorGeometry = new THREE.IcosahedronGeometry(20)
         const meteorMaterial = new THREE.MeshLambertMaterial({
-          color: 0x444444
+          color: 0x465a57
         })
 
         const gemGeometry = new THREE.IcosahedronGeometry(10)
-        const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xffea49 })
+        const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xe20069 })
 
         const extraLifeGeometry = new THREE.IcosahedronGeometry(10)
         const extraLifeMaterial = new THREE.MeshLambertMaterial({
-          color: 0xf189f7
+          color: 0xffea49
         })
 
         cannonStorm.forEach(particle => {
@@ -297,14 +269,8 @@ function gameStart(shipBody, threeShip, shipShield) {
           }, 200)
         }
       })
-      // move ship to game position
-      // run meteor function
-      // run gem function
-      // run extra lives function
 
       countScore = true
-
-      // console.log(cannonStorm, threeStorm)
     })
   )
 }
@@ -340,7 +306,7 @@ renderer.setSize(window.innerWidth, window.innerHeight)
 renderer.setClearColor(0x000000)
 document.body.appendChild(renderer.domElement)
 
-// // ADD AMMO COUNTER
+// ADD AMMO COUNTER
 displayShotsLeft()
 
 setInterval(() => {
@@ -400,7 +366,7 @@ for (var i = 0; i < 40; i++) {
 }
 
 // INITIALIZE CANNON DEBUG RENDERER
-var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
+// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
 
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new THREEx.KeyboardState(renderer.domElement)
@@ -471,35 +437,16 @@ function makeStormParticles(
   mass = 5,
   collisionFilterGroup = METEORS,
   collisionFilterMask = SHIP | SHOTS
-  // speed = [-3, -1],
-  // positionX = [-1000, 1000],
-  // positionY = [2000, 3000],
-  // velocityX = [-0.3, 0.3],
-  // velocityY = [-300, 100],
-  // impulseForce = [-50, 50],
-  // impulsePoint = [-30, 30]
 ) {
-  // console.log('makeStormParticles')
-
-  // if (
-  //   particleStatus.meteors === false ||
-  //   particleStatus.gems === false ||
-  //   particleStatus.extraLives === false
-  // ) {
-  //   // console.log('New particles')
-
   switch (shape) {
     case 'meteor':
       shape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
-      // particleStatus.meteors = true
       break
     case 'gem':
       shape = new CANNON.Sphere(10)
-      // particleStatus.gems = true
       break
     case 'extraLife':
       shape = new CANNON.Sphere(10)
-      // particleStatus.extraLives = true
       break
   }
 
@@ -516,48 +463,9 @@ function makeStormParticles(
     // GIVE STORM PARTICLE A NAME
     cannonStormParticle.name = name
 
-    // placeParticles(cannonStormParticle)
-
     world.addBody(cannonStormParticle)
     cannonStorm.push(cannonStormParticle)
-
-    // if ((cannonStormParticle.name = 'Meteor')) {
-    //   cannonMeteors.push(cannonStormParticle)
   }
-  //
-  // if ((cannonStormParticle.name = 'Gem')) {
-  //   cannonGems.push(cannonStormParticle)
-  // }
-  //
-  // if ((cannonStormParticle.name = 'ExtraLife')) {
-  //   cannonExtraLives.push(cannonStormParticle)
-  // }
-
-  // switch (shape) {
-  //   case 'meteor':
-  //     cannonMeteors.push(cannonStormParticle)
-  //     break
-  //   case 'gem':
-  //     cannonGems.push(cannonStormParticle)
-  //     break
-  //   case 'extraLife':
-  //     cannonExtraLives.push(cannonStormParticle)
-  //     break
-  // }
-  // }
-  // } else {
-  //   // console.log('Old particles')
-  //   // console.log(cannonMeteors)
-  //   // cannonMeteors.forEach(cannonStormParticle => {
-  //   //   placeParticles(cannonStormParticle)
-  //   // })
-  //   // cannonGems.forEach(cannonStormParticle => {
-  //   //   placeParticles(cannonStormParticle)
-  //   // })
-  //   // cannonExtraLives.forEach(cannonStormParticle => {
-  //   //   placeParticles(cannonStormParticle)
-  //   // })
-  // }
 }
 
 function placeStormParticles(
@@ -608,7 +516,7 @@ function initCannon() {
   world = new CANNON.World()
   world.broadphase = new CANNON.NaiveBroadphase()
   world.solver.iterations = 10
-} // Close initCannon()
+}
 
 // CREATE SHIP
 // INSTANTIATE A LOADER
@@ -641,7 +549,7 @@ loader.load(
     const shipShield = new THREE.Mesh(shieldGeometry, shieldMaterial)
     shipShield.position.y = -100
 
-    shieldMaterial.uniforms.glowColor.value.set(0xffea37)
+    shieldMaterial.uniforms.glowColor.value.set(0xffea49)
     shieldMaterial.uniforms.coeficient.value = 1.2
     shieldMaterial.uniforms.power.value = 2.8
     scene.add(shipShield)
@@ -664,7 +572,7 @@ loader.load(
             scene.add(shipShield)
           }
           lives--
-          explode(2, 75, e.target.position, 0x777777)
+          explode(2, 75, e.target.position, 0x465a57)
           crashSound.play()
           e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0)
         }
@@ -687,24 +595,24 @@ loader.load(
       }
 
       if (lives === 6) {
-        shieldMaterial.uniforms.glowColor.value.set(0xffea37)
+        shieldMaterial.uniforms.glowColor.value.set(0xffea49)
       }
 
       if (lives === 5) {
-        shieldMaterial.uniforms.glowColor.value.set(0x47ad9c)
+        shieldMaterial.uniforms.glowColor.value.set(0xd1c03c)
       }
 
       if (lives === 4) {
-        shieldMaterial.uniforms.glowColor.value.set(0xf189f7)
+        shieldMaterial.uniforms.glowColor.value.set(0xa3952f)
       }
 
       if (lives === 3) {
-        shieldMaterial.uniforms.glowColor.value.set(0xffffff)
+        shieldMaterial.uniforms.glowColor.value.set(0x746b22)
       }
 
       if (lives === 2) {
         scene.add(shipShield)
-        shieldMaterial.uniforms.glowColor.value.set(0x676a6c)
+        shieldMaterial.uniforms.glowColor.value.set(0x464014)
       }
 
       if (lives === 1) {
@@ -725,7 +633,6 @@ loader.load(
         laserSound.play()
 
         // CREATE CANNON SHOT
-        // var gunShot = new CANNON.Cylinder(1, 1, 25, 32)
         const gunShot = new CANNON.Sphere(2)
         const threeShotGroup = new THREE.Group()
         let cannonShotGroup = {}
@@ -759,7 +666,7 @@ loader.load(
             meteorExplosionSound.play()
             currentCube.position.set(rand(-1000, 1000), rand(1000, 2000), 0)
 
-            explode(4, 10, e.target.position, 0x777777)
+            explode(4, 10, e.target.position, 0x465a57)
 
             currentCube.applyLocalImpulse(
               new CANNON.Vec3(0, 0, 0),
@@ -814,10 +721,9 @@ loader.load(
       if (keyboard.pressed('left') && shipBody.position.x > -150) {
         shipBody.position.x -= 4
 
-        // // TILT LEFT
+        // TILT LEFT
         if (threeShip.rotation.y > -1) {
           threeShip.rotation.y -= 0.1
-          // * delta;
         }
         // MOVE TO THE RIGHT
       } else if (keyboard.pressed('right') && shipBody.position.x < 150) {
@@ -826,7 +732,6 @@ loader.load(
         // TILT RIGHT
         if (threeShip.rotation.y < 1) {
           threeShip.rotation.y += 0.1
-          // * delta;
         }
       } else if (keyboard.pressed('up') && shipBody.position.y < 100) {
         shipBody.position.y += 4
@@ -835,11 +740,9 @@ loader.load(
       } else if (threeShip.rotation.y > 0.5) {
         // RESET LEFT TILT ON KEY UP
         threeShip.rotation.y -= 0.1
-        // * delta
         // RESET RIGHT TILT ON KEY UP
       } else if (threeShip.rotation.y < 0) {
         threeShip.rotation.y += 0.1
-        // * delta
       } else {
         threeShip.rotation.y = 0
       }
@@ -854,11 +757,6 @@ loader.load(
           let shotNum = index
           shot.position.y = cannonShots[index].children[0].position.y - 70
           if (shot.position.y > 300) {
-            // shot.children[0].material.transparent = true;
-            // shot.children[1].material.transparent = true;
-            // shot.children[0].material.opacity -= 0.05;
-            // shot.children[1].material.opacity -= 0.05;
-
             scene.remove(shot)
 
             world.removeBody(cannonShots[index].children[0])
@@ -866,17 +764,6 @@ loader.load(
 
             threeShots.splice(index, 1)
             cannonShots.splice(index, 1)
-
-            // if (shot.children[1].material.opacity < 0.1) {
-            //   scene.remove(shot);
-            //
-            //   console.log(cannonShots);
-            //   world.removeBody(cannonShots[index].children[0]);
-            //   world.removeBody(cannonShots[index].children[1]);
-            //
-            //   threeShots.splice(index, 1);
-            //   cannonShots.splice(index, 1);
-            // }
           }
         })
       }
@@ -896,7 +783,7 @@ loader.load(
 
 function animate() {
   requestAnimationFrame(animate)
-  cannonDebugRenderer.update()
+  // cannonDebugRenderer.update()
 
   updatePhysics()
   updateGrid()
@@ -912,7 +799,7 @@ function animate() {
 animate()
 
 function updatePhysics() {
-  cannonDebugRenderer.update()
+  // cannonDebugRenderer.update()
 
   // STEP THE PHYSICS WORLD
   world.step(timeStep)
