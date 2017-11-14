@@ -125,7 +125,7 @@ gameOverContainer.appendChild(playAgainContainer)
 
 // END GAME
 function gameOver(shipBody, threeShip) {
-  explode(3, 100, threeShip.position, 0xffffff)
+  explode(4, 100, threeShip.position, 0xffffff)
   dieSound.play()
   world.removeBody(shipBody)
   scene.remove(threeShip)
@@ -615,7 +615,7 @@ loader.load(
             scene.add(shipShield)
           }
           lives--
-          explode(2, 75, e.target.position, 0x465a57)
+          explode(4, 50, e.target.position, 0x465a57)
           crashSound.play()
           e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0)
         }
@@ -709,7 +709,7 @@ loader.load(
             meteorExplosionSound.play()
             currentCube.position.set(rand(-1000, 1000), rand(1000, 2000), 0)
 
-            explode(4, 10, e.target.position, 0x465a57)
+            explode(4, 15, e.target.position, 0x465a57)
 
             currentCube.applyLocalImpulse(
               new CANNON.Vec3(0, 0, 0),
