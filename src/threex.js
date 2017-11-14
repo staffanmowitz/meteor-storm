@@ -34,7 +34,7 @@ var THREEx = THREEx || {}
  *   - microevent.js for events handling
  *   - in this._onkeyChange, generate a string from the DOM event
  *   - use this as event name
-*/
+ */
 THREEx.KeyboardState = function(domElement) {
   this.domElement = domElement || document
   // to store the current state
@@ -66,7 +66,7 @@ THREEx.KeyboardState = function(domElement) {
 
 /**
  * To stop listening of the keyboard events
-*/
+ */
 THREEx.KeyboardState.prototype.destroy = function() {
   // unbind keyEvents
   this.domElement.removeEventListener('keydown', this._onKeyDown, false)
@@ -91,7 +91,7 @@ THREEx.KeyboardState.ALIAS = {
 
 /**
  * to process the keyboard dom event
-*/
+ */
 THREEx.KeyboardState.prototype._onKeyChange = function(event) {
   // log to debug
   //console.log("onKeyChange", event, event.keyCode, event.shiftKey, event.ctrlKey, event.altKey, event.metaKey)
@@ -112,7 +112,7 @@ THREEx.KeyboardState.prototype._onKeyChange = function(event) {
  *
  * @param {String} keyDesc the description of the key. format : modifiers+key e.g shift+A
  * @returns {Boolean} true if the key is pressed, false otherwise
-*/
+ */
 THREEx.KeyboardState.prototype.pressed = function(keyDesc) {
   var keys = keyDesc.split('+')
   for (var i = 0; i < keys.length; i++) {
@@ -382,7 +382,7 @@ THREEx.LaserBeam = function() {
   var material = new THREE.MeshBasicMaterial({
     map: texture,
     blending: THREE.AdditiveBlending,
-    color: 0x4444aa,
+    color: 0xe4296d,
     side: THREE.DoubleSide,
     depthWrite: false,
     transparent: true
