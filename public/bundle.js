@@ -54262,9 +54262,11 @@ const lifeSound = new Howl({ src: 'life.mp3' });
 const crashSound = new Howl({ src: 'crash.mp3' });
 const dieSound = new Howl({ src: 'die.mp3' });
 const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' });
-const music = new Howl({ src: 'meteor_storm_theme.mp3' });
-
-music.play();
+const music = new Howl({
+  src: 'meteor_storm_theme.mp3',
+  loop: true,
+  autoplay: true
+});
 
 // ADD WELCOME SCREEN
 const welcomeContainer = document.createElement('div');
