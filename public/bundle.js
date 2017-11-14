@@ -54291,7 +54291,7 @@ welcomeContainer.appendChild(playContainer);
 
 // ADD COUNTER CONTAINER
 const counterContainer = document.createElement('div');
-counterContainer.classList.add('counters');
+counterContainer.classList.add('counters', 'hide');
 document.body.appendChild(counterContainer);
 
 // ADD COUNTERS
@@ -54344,6 +54344,12 @@ function gameOver(shipBody, threeShip) {
     gameOverContainer.classList.remove('hide');
   }, 100);
 
+  counterContainer.classList.add('hide');
+
+  displayShots.forEach(shot => {
+    shot.visible = false;
+  });
+
   scoreText.nodeValue = `Your Score: ${score + bonus}`;
 
   introDone = false;
@@ -54351,7 +54357,6 @@ function gameOver(shipBody, threeShip) {
 
 // START GAME
 function gameStart(shipBody, threeShip, shipShield) {
-  // MOVE SHIP FORWARD ON GAME START
   let playButtons = document.querySelectorAll('.play p');
   playButtons = Array.from(playButtons);
   playButtons.forEach(playButton => playButton.addEventListener('click', e => {
@@ -54366,6 +54371,17 @@ function gameStart(shipBody, threeShip, shipShield) {
     }, 1000);
 
     renderer.domElement.focus();
+
+    counterContainer.classList.remove('hide');
+
+    displayShotsLeft();
+
+    setInterval(() => {
+      displayShots.forEach(shot => {
+        shot.visible = true;
+      });
+      shootCount = 0;
+    }, 1000 * 10);
 
     if (!scene.getObjectByName('Ship')) {
       world.addBody(shipBody);
@@ -54520,15 +54536,15 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setClearColor(0x000000);
 document.body.appendChild(renderer.domElement);
 
-// ADD AMMO COUNTER
-displayShotsLeft();
-
-setInterval(() => {
-  displayShots.forEach(shot => {
-    shot.visible = true;
-  });
-  shootCount = 0;
-}, 1000 * 10);
+// ADD SHOT COUNTER
+// displayShotsLeft()
+//
+// setInterval(() => {
+//   displayShots.forEach(shot => {
+//     shot.visible = true
+//   })
+//   shootCount = 0
+// }, 1000 * 10)
 
 function displayShotsLeft() {
   const displayShotGeometry = new __WEBPACK_IMPORTED_MODULE_0_three__["BoxGeometry"](1.2, 1.2, 1.2);
