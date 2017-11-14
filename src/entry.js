@@ -40,6 +40,10 @@ let renderer
 let updateFns = []
 
 let cannonStorm = []
+// let cannonMeteors = []
+// let cannonGems = []
+// let cannonExtraLives = []
+
 let threeStorm = []
 
 let initParticlePos = []
@@ -62,11 +66,11 @@ let shootCount = 0
 
 let introDone = false
 
-let particleStatus = {
-  metors: false,
-  gems: false,
-  extraLives: false
-}
+// let particleStatus = {
+//   metors: false,
+//   gems: false,
+//   extraLives: false
+// }
 
 // FILTER GROUPS
 const SHIP = 1
@@ -184,6 +188,11 @@ function gameStart(shipBody, threeShip, shipShield) {
         score = 0
         lives = 6
 
+        displayShots.forEach(shot => {
+          shot.visible = true
+          shootCount = 0
+        })
+
         shipBody.position.set(0, -100, 0)
         threeShip.position.set(0, -100, 0)
         shipShield.position.set(0, -100, 0)
@@ -191,16 +200,35 @@ function gameStart(shipBody, threeShip, shipShield) {
         shipShield.material.uniforms.glowColor.value.set(0xffea37)
       }
 
-      // CREATE 100 CANNON.JS METEORS
-      makeStormParticles('meteor', 'Meteor')
-      // CREATE 10 CANNON.JS GEMS
-      makeStormParticles(
-        'gem',
+      if (cannonStorm.length === 0) {
+        // CREATE 100 CANNON.JS METEORS
+        makeStormParticles('meteor', 'Meteor')
+
+        // CREATE 10 CANNON.JS GEMS
+        makeStormParticles(
+          'gem', // Shape
+          'Gem', // Name
+          10, // Number
+          2, // Mass
+          GEMS, // Collision filter group
+          SHIP // Collision filter mask
+        )
+
+        // CREATE 2 CANNON.JS EXTRA LIVES
+        makeStormParticles(
+          'extraLife', // Shape
+          'ExtraLife', // Name
+          2, // Number
+          2, // Mass
+          LIVES, // Collision filter group
+          SHIP // Collision filter mask
+        )
+      }
+
+      placeStormParticles('Meteor')
+
+      placeStormParticles(
         'Gem', // Name
-        10, // Number
-        2, // Mass
-        GEMS, // Collision filter group
-        SHIP, // Collision filter mask
         [-3, -1], // Speed
         [-700, 700], // X position
         [2000, 3000], // Y position
@@ -210,14 +238,8 @@ function gameStart(shipBody, threeShip, shipShield) {
         [-30, 30] // Impulse point
       )
 
-      // CREATE 2 CANNON.JS EXTRA LIVES
-      makeStormParticles(
-        'extraLife',
+      placeStormParticles(
         'ExtraLife', // Name
-        2, // Number
-        2, // Mass
-        LIVES, // Collision filter group
-        SHIP, // Collision filter mask
         [-3, -1], // Speed
         [-300, 300], // X position
         [2000, 3000], // Y position
@@ -227,36 +249,40 @@ function gameStart(shipBody, threeShip, shipShield) {
         [-30, 30] // Impulse point
       )
 
-      // CREATE THREE.JS STORM PARTICLES
-      const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
-      const meteorMaterial = new THREE.MeshLambertMaterial({ color: 0x444444 })
+      if (threeStorm.length === 0) {
+        // CREATE THREE.JS STORM PARTICLES
+        const meteorGeometry = new THREE.BoxGeometry(20, 20, 20)
+        const meteorMaterial = new THREE.MeshLambertMaterial({
+          color: 0x444444
+        })
 
-      const gemGeometry = new THREE.IcosahedronGeometry(10)
-      const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xffea49 })
+        const gemGeometry = new THREE.IcosahedronGeometry(10)
+        const gemMaterial = new THREE.MeshLambertMaterial({ color: 0xffea49 })
 
-      const extraLifeGeometry = new THREE.IcosahedronGeometry(10)
-      const extraLifeMaterial = new THREE.MeshLambertMaterial({
-        color: 0xf189f7
-      })
+        const extraLifeGeometry = new THREE.IcosahedronGeometry(10)
+        const extraLifeMaterial = new THREE.MeshLambertMaterial({
+          color: 0xf189f7
+        })
 
-      cannonStorm.forEach(particle => {
-        let particleMesh
+        cannonStorm.forEach(particle => {
+          let particleMesh
 
-        if (particle.name === 'Meteor') {
-          particleMesh = new THREE.Mesh(meteorGeometry, meteorMaterial)
-        }
+          if (particle.name === 'Meteor') {
+            particleMesh = new THREE.Mesh(meteorGeometry, meteorMaterial)
+          }
 
-        if (particle.name === 'Gem') {
-          particleMesh = new THREE.Mesh(gemGeometry, gemMaterial)
-        }
+          if (particle.name === 'Gem') {
+            particleMesh = new THREE.Mesh(gemGeometry, gemMaterial)
+          }
 
-        if (particle.name === 'ExtraLife') {
-          particleMesh = new THREE.Mesh(extraLifeGeometry, extraLifeMaterial)
-        }
+          if (particle.name === 'ExtraLife') {
+            particleMesh = new THREE.Mesh(extraLifeGeometry, extraLifeMaterial)
+          }
 
-        scene.add(particleMesh)
-        threeStorm.push(particleMesh)
-      })
+          scene.add(particleMesh)
+          threeStorm.push(particleMesh)
+        })
+      }
 
       updateFns.push(() => {
         if (!introDone) {
@@ -277,6 +303,8 @@ function gameStart(shipBody, threeShip, shipShield) {
       // run extra lives function
 
       countScore = true
+
+      // console.log(cannonStorm, threeStorm)
     })
   )
 }
@@ -320,7 +348,7 @@ setInterval(() => {
     shot.visible = true
   })
   shootCount = 0
-}, 10000 * 1)
+}, 1000 * 10)
 
 function displayShotsLeft() {
   const displayShotGeometry = new THREE.BoxGeometry(1.2, 1.2, 1.2)
@@ -442,7 +470,98 @@ function makeStormParticles(
   number = 100,
   mass = 5,
   collisionFilterGroup = METEORS,
-  collisionFilterMask = SHIP | SHOTS,
+  collisionFilterMask = SHIP | SHOTS
+  // speed = [-3, -1],
+  // positionX = [-1000, 1000],
+  // positionY = [2000, 3000],
+  // velocityX = [-0.3, 0.3],
+  // velocityY = [-300, 100],
+  // impulseForce = [-50, 50],
+  // impulsePoint = [-30, 30]
+) {
+  // console.log('makeStormParticles')
+
+  // if (
+  //   particleStatus.meteors === false ||
+  //   particleStatus.gems === false ||
+  //   particleStatus.extraLives === false
+  // ) {
+  //   // console.log('New particles')
+
+  switch (shape) {
+    case 'meteor':
+      shape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
+      // particleStatus.meteors = true
+      break
+    case 'gem':
+      shape = new CANNON.Sphere(10)
+      // particleStatus.gems = true
+      break
+    case 'extraLife':
+      shape = new CANNON.Sphere(10)
+      // particleStatus.extraLives = true
+      break
+  }
+
+  let cannonStormParticle
+
+  for (var i = 0; i < number; i++) {
+    cannonStormParticle = new CANNON.Body({
+      mass: mass,
+      collisionFilterGroup: collisionFilterGroup,
+      collisionFilterMask: collisionFilterMask
+    })
+    cannonStormParticle.addShape(shape)
+
+    // GIVE STORM PARTICLE A NAME
+    cannonStormParticle.name = name
+
+    // placeParticles(cannonStormParticle)
+
+    world.addBody(cannonStormParticle)
+    cannonStorm.push(cannonStormParticle)
+
+    // if ((cannonStormParticle.name = 'Meteor')) {
+    //   cannonMeteors.push(cannonStormParticle)
+  }
+  //
+  // if ((cannonStormParticle.name = 'Gem')) {
+  //   cannonGems.push(cannonStormParticle)
+  // }
+  //
+  // if ((cannonStormParticle.name = 'ExtraLife')) {
+  //   cannonExtraLives.push(cannonStormParticle)
+  // }
+
+  // switch (shape) {
+  //   case 'meteor':
+  //     cannonMeteors.push(cannonStormParticle)
+  //     break
+  //   case 'gem':
+  //     cannonGems.push(cannonStormParticle)
+  //     break
+  //   case 'extraLife':
+  //     cannonExtraLives.push(cannonStormParticle)
+  //     break
+  // }
+  // }
+  // } else {
+  //   // console.log('Old particles')
+  //   // console.log(cannonMeteors)
+  //   // cannonMeteors.forEach(cannonStormParticle => {
+  //   //   placeParticles(cannonStormParticle)
+  //   // })
+  //   // cannonGems.forEach(cannonStormParticle => {
+  //   //   placeParticles(cannonStormParticle)
+  //   // })
+  //   // cannonExtraLives.forEach(cannonStormParticle => {
+  //   //   placeParticles(cannonStormParticle)
+  //   // })
+  // }
+}
+
+function placeStormParticles(
+  name,
   speed = [-3, -1],
   positionX = [-1000, 1000],
   positionY = [2000, 3000],
@@ -451,7 +570,9 @@ function makeStormParticles(
   impulseForce = [-50, 50],
   impulsePoint = [-30, 30]
 ) {
-  function placeParticles(cannonStormParticle) {
+  const particles = cannonStorm.filter(particle => particle.name === name)
+
+  particles.forEach(cannonStormParticle => {
     // PLACE STORM PARTICLES RANDOMLY ON CANVAS AND GIVE THEM RANDOM VELOCITY
     initParticlePos.push(rand(speed[0], speed[1]))
     cannonStormParticle.position.set(
@@ -479,54 +600,7 @@ function makeStormParticles(
         rand(impulsePoint[0], impulsePoint[1])
       )
     )
-  }
-
-  if (
-    particleStatus.meteors === false ||
-    particleStatus.gems === false ||
-    particleStatus.extraLives === false
-  ) {
-    console.log('New particles')
-
-    switch (shape) {
-      case 'meteor':
-        shape = new CANNON.Box(new CANNON.Vec3(10, 10, 10))
-        particleStatus.meteors = true
-        break
-      case 'gem':
-        shape = new CANNON.Sphere(10)
-        particleStatus.gems = true
-        break
-      case 'extraLife':
-        shape = new CANNON.Sphere(10)
-        particleStatus.extraLives = true
-        break
-    }
-    // console.log(shape)
-    let cannonStormParticle
-
-    for (var i = 0; i < number; i++) {
-      cannonStormParticle = new CANNON.Body({
-        mass: mass,
-        collisionFilterGroup: collisionFilterGroup,
-        collisionFilterMask: collisionFilterMask
-      })
-      cannonStormParticle.addShape(shape)
-
-      // GIVE STORM PARTICLE A NAME
-      cannonStormParticle.name = name
-
-      placeParticles(cannonStormParticle)
-
-      world.addBody(cannonStormParticle)
-      cannonStorm.push(cannonStormParticle)
-    }
-  } else {
-    console.log('Old particles')
-    cannonStorm.forEach(cannonStormParticle => {
-      placeParticles(cannonStormParticle)
-    })
-  }
+  })
 }
 
 // CREATE CANNON.JS WORLD
@@ -729,9 +803,9 @@ loader.load(
         fired = false
       })
 
-      if (lives === 0) {
-        window.removeEventListener('keydown', fire)
-      }
+      // if (lives === 0) {
+      //   window.removeEventListener('keydown', fire)
+      // }
     }) // End shooting
 
     // MOVE SPACESHIP
