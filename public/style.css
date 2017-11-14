@@ -51,6 +51,10 @@ p {
   opacity: 0;
 }
 
+.remove {
+  display: none;
+}
+
 .counters {
   padding: 0 20px;
   position: fixed;
