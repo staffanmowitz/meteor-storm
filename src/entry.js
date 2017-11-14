@@ -153,19 +153,24 @@ function gameStart(shipBody, threeShip, shipShield) {
         scene.add(threeShip)
         scene.add(shipShield)
 
+        // RESET SCORE AND SHIELD LEVEL
         score = 0
+        bonus = 0
         lives = 6
 
+        // RESET SHOT COUNT
         displayShots.forEach(shot => {
           shot.visible = true
           shootCount = 0
         })
 
+        // RESET SHIP POSITION
         shipBody.position.set(0, -100, 0)
         threeShip.position.set(0, -100, 0)
         shipShield.position.set(0, -100, 0)
 
-        shipShield.material.uniforms.glowColor.value.set(0xffea37)
+        // RESET SHIELD COLOR
+        shipShield.material.uniforms.glowColor.value.set(0xffea49)
       }
 
       // CREATE STORM!
