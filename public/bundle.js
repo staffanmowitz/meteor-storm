@@ -54333,7 +54333,7 @@ gameOverContainer.appendChild(playAgainContainer);
 
 // END GAME
 function gameOver(shipBody, threeShip) {
-  explode(3, 100, threeShip.position, 0xffffff);
+  explode(4, 100, threeShip.position, 0xffffff);
   dieSound.play();
   world.removeBody(shipBody);
   scene.remove(threeShip);
@@ -54344,11 +54344,9 @@ function gameOver(shipBody, threeShip) {
     gameOverContainer.classList.remove('hide');
   }, 100);
 
-  counterContainer.classList.add('hide');
+  stopReload();
 
-  displayShots.forEach(shot => {
-    shot.visible = false;
-  });
+  counterContainer.classList.add('hide');
 
   scoreText.nodeValue = `Your Score: ${score + bonus}`;
 
@@ -54374,14 +54372,7 @@ function gameStart(shipBody, threeShip, shipShield) {
 
     counterContainer.classList.remove('hide');
 
-    displayShotsLeft();
-
-    setInterval(() => {
-      displayShots.forEach(shot => {
-        shot.visible = true;
-      });
-      shootCount = 0;
-    }, 1000 * 10);
+    startReload();
 
     if (!scene.getObjectByName('Ship')) {
       world.addBody(shipBody);
@@ -54537,14 +54528,33 @@ renderer.setClearColor(0x000000);
 document.body.appendChild(renderer.domElement);
 
 // ADD SHOT COUNTER
-// displayShotsLeft()
-//
-// setInterval(() => {
-//   displayShots.forEach(shot => {
-//     shot.visible = true
-//   })
-//   shootCount = 0
-// }, 1000 * 10)
+
+displayShotsLeft();
+displayShots.forEach(shot => {
+  shot.visible = false;
+});
+
+let reload;
+
+function startReload() {
+  displayShots.forEach(shot => {
+    shot.visible = true;
+  });
+  reload = window.setInterval(() => {
+    displayShots.forEach(shot => {
+      shot.visible = true;
+    });
+    shootCount = 0;
+  }, 1000 * 10);
+}
+
+function stopReload() {
+  window.clearInterval(reload);
+  displayShots.forEach(shot => {
+    shot.visible = false;
+    shootCount = 0;
+  });
+}
 
 function displayShotsLeft() {
   const displayShotGeometry = new __WEBPACK_IMPORTED_MODULE_0_three__["BoxGeometry"](1.2, 1.2, 1.2);
@@ -54759,7 +54769,7 @@ function (threeShip) {
           scene.add(shipShield);
         }
         lives--;
-        explode(2, 75, e.target.position, 0x465a57);
+        explode(4, 50, e.target.position, 0x465a57);
         crashSound.play();
         e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0);
       }
@@ -54807,7 +54817,7 @@ function (threeShip) {
     }
 
     if (lives === 0) {
-      gameOver(shipBody, threeShip, shipShield);
+      gameOver(shipBody, threeShip);
     }
   });
 
@@ -54853,7 +54863,7 @@ function (threeShip) {
           meteorExplosionSound.play();
           currentCube.position.set(rand(-1000, 1000), rand(1000, 2000), 0);
 
-          explode(4, 10, e.target.position, 0x465a57);
+          explode(4, 15, e.target.position, 0x465a57);
 
           currentCube.applyLocalImpulse(new __WEBPACK_IMPORTED_MODULE_1_cannon__["Vec3"](0, 0, 0), new __WEBPACK_IMPORTED_MODULE_1_cannon__["Vec3"](0, 0, 0));
 
