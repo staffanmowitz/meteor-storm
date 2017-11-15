@@ -54212,7 +54212,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
 
 __webpack_require__(64)(__WEBPACK_IMPORTED_MODULE_0_three__);
-__webpack_require__(65)(__WEBPACK_IMPORTED_MODULE_0_three__, __WEBPACK_IMPORTED_MODULE_1_cannon__);
+// require("./cannondebugrenderer.js")(THREE, CANNON);
 
 function rand(min, max) {
   return Math.random() * (max - min) + min;
@@ -54256,97 +54256,104 @@ const GEMS = 4;
 const LIVES = 5;
 
 // ADD SOUND EFFECTS
-const laserSound = new Howl({ src: 'laser.mp3' });
-const bonusSound = new Howl({ src: 'bonus.mp3' });
-const lifeSound = new Howl({ src: 'life.mp3' });
-const crashSound = new Howl({ src: 'crash.mp3' });
-const dieSound = new Howl({ src: 'die.mp3' });
-const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' });
+const laserSound = new Howl({ src: "laser.mp3" });
+const bonusSound = new Howl({ src: "bonus.mp3" });
+const lifeSound = new Howl({ src: "life.mp3" });
+const crashSound = new Howl({ src: "crash.mp3" });
+const dieSound = new Howl({ src: "die.mp3" });
+const meteorExplosionSound = new Howl({ src: "meteor_explosion.mp3" });
 const music = new Howl({
-  src: 'meteor_storm_theme.mp3',
+  src: "meteor_storm_theme.mp3",
   loop: true,
   autoplay: true
 });
 
+const musicMelody = new Howl({
+  src: "meteor_storm_melody.mp3",
+  loop: true
+});
+
 // ADD WELCOME SCREEN
-const welcomeContainer = document.createElement('div');
-welcomeContainer.classList.add('welcome');
+const welcomeContainer = document.createElement("div");
+welcomeContainer.classList.add("welcome");
 document.body.appendChild(welcomeContainer);
 
 // ADD LOGO
-const logoContainer = document.createElement('div');
-const logo = document.createTextNode('Meteor Storm');
+const logoContainer = document.createElement("div");
+const logo = document.createTextNode("Meteor Storm");
 logoContainer.appendChild(logo);
 welcomeContainer.appendChild(logoContainer);
 
 // ADD PLAY BUTTON
-const playContainer = document.createElement('div');
-playContainer.classList.add('play');
-const playParagraph = document.createElement('p');
-const play = document.createTextNode('Play');
+const playContainer = document.createElement("div");
+playContainer.classList.add("play");
+const playParagraph = document.createElement("p");
+const play = document.createTextNode("Play");
 
 playParagraph.appendChild(play);
 playContainer.appendChild(playParagraph);
 welcomeContainer.appendChild(playContainer);
 
 // ADD COUNTER CONTAINER
-const counterContainer = document.createElement('div');
-counterContainer.classList.add('counters', 'hide');
+const counterContainer = document.createElement("div");
+counterContainer.classList.add("counters", "hide");
 document.body.appendChild(counterContainer);
 
 // ADD COUNTERS
 function addCounter(counterName, counterText, variable) {
-  const container = document.createElement('div');
+  const container = document.createElement("div");
   container.classList.add(counterName);
   let content = document.createTextNode(`${counterText}: ${score}`);
   container.appendChild(content);
   counterContainer.appendChild(container);
 }
 
-addCounter('score', 'Score', score);
-addCounter('lives', 'Shield', lives);
+addCounter("score", "Score", score);
+addCounter("lives", "Shield", lives);
 
 // ADD GAME OVER SCREEN
-const gameOverContainer = document.createElement('div');
-gameOverContainer.classList.add('game-over', 'remove');
+const gameOverContainer = document.createElement("div");
+gameOverContainer.classList.add("game-over", "remove");
 document.body.appendChild(gameOverContainer);
 
-const playAgainContainer = document.createElement('div');
-playAgainContainer.classList.add('play');
+const playAgainContainer = document.createElement("div");
+playAgainContainer.classList.add("play");
 
-const gameOverParagraph = document.createElement('p');
-gameOverParagraph.classList.add('large');
-const gameOverText = document.createTextNode('Game Over');
+const gameOverParagraph = document.createElement("p");
+gameOverParagraph.classList.add("large");
+const gameOverText = document.createTextNode("Game Over");
 gameOverParagraph.appendChild(gameOverText);
 gameOverContainer.appendChild(gameOverParagraph);
 
-const scoreParagraph = document.createElement('p');
-let scoreText = document.createTextNode('Your Score:');
+const scoreParagraph = document.createElement("p");
+let scoreText = document.createTextNode("Your Score:");
 scoreParagraph.appendChild(scoreText);
 gameOverContainer.appendChild(scoreParagraph);
 
-const playAgainParagraph = document.createElement('p');
-const playAgain = document.createTextNode('Play Again');
+const playAgainParagraph = document.createElement("p");
+const playAgain = document.createTextNode("Play Again");
 playAgainParagraph.appendChild(playAgain);
 playAgainContainer.appendChild(playAgainParagraph);
 gameOverContainer.appendChild(playAgainContainer);
 
 // END GAME
 function gameOver(shipBody, threeShip) {
+  // musicMelody.fade(1, 0, 1000);
+  musicMelody.stop();
+  music.play();
   explode(4, 100, threeShip.position, 0xffffff);
-  dieSound.play();
   world.removeBody(shipBody);
   scene.remove(threeShip);
   countScore = false;
 
-  gameOverContainer.classList.remove('remove');
+  gameOverContainer.classList.remove("remove");
   setTimeout(() => {
-    gameOverContainer.classList.remove('hide');
+    gameOverContainer.classList.remove("hide");
   }, 100);
 
   stopReload();
 
-  counterContainer.classList.add('hide');
+  counterContainer.classList.add("hide");
 
   scoreText.nodeValue = `Your Score: ${score + bonus}`;
 
@@ -54355,26 +54362,29 @@ function gameOver(shipBody, threeShip) {
 
 // START GAME
 function gameStart(shipBody, threeShip, shipShield) {
-  let playButtons = document.querySelectorAll('.play p');
+  let playButtons = document.querySelectorAll(".play p");
   playButtons = Array.from(playButtons);
-  playButtons.forEach(playButton => playButton.addEventListener('click', e => {
-    welcomeContainer.classList.add('hide');
+  playButtons.forEach(playButton => playButton.addEventListener("click", e => {
+    music.stop();
+    // musicMelody.fade(0, 1, 1000);
+    musicMelody.play();
+    welcomeContainer.classList.add("hide");
     setTimeout(() => {
-      welcomeContainer.classList.add('remove');
+      welcomeContainer.classList.add("remove");
     }, 1000);
 
-    gameOverContainer.classList.add('hide');
+    gameOverContainer.classList.add("hide");
     setTimeout(() => {
-      gameOverContainer.classList.add('remove');
+      gameOverContainer.classList.add("remove");
     }, 1000);
 
     renderer.domElement.focus();
 
-    counterContainer.classList.remove('hide');
+    counterContainer.classList.remove("hide");
 
     startReload();
 
-    if (!scene.getObjectByName('Ship')) {
+    if (!scene.getObjectByName("Ship")) {
       world.addBody(shipBody);
       scene.add(threeShip);
       scene.add(shipShield);
@@ -54402,11 +54412,11 @@ function gameStart(shipBody, threeShip, shipShield) {
     // CREATE STORM!
     if (cannonStorm.length === 0) {
       // CREATE 100 CANNON.JS METEORS
-      makeStormParticles('meteor', 'Meteor');
+      makeStormParticles("meteor", "Meteor");
 
       // CREATE 10 CANNON.JS GEMS
-      makeStormParticles('gem', // Shape
-      'Gem', // Name
+      makeStormParticles("gem", // Shape
+      "Gem", // Name
       10, // Number
       2, // Mass
       GEMS, // Collision filter group
@@ -54414,8 +54424,8 @@ function gameStart(shipBody, threeShip, shipShield) {
       );
 
       // CREATE 2 CANNON.JS EXTRA LIVES
-      makeStormParticles('extraLife', // Shape
-      'ExtraLife', // Name
+      makeStormParticles("extraLife", // Shape
+      "ExtraLife", // Name
       2, // Number
       2, // Mass
       LIVES, // Collision filter group
@@ -54424,10 +54434,10 @@ function gameStart(shipBody, threeShip, shipShield) {
     }
 
     // PLACE METEORS IN SCENE
-    placeStormParticles('Meteor');
+    placeStormParticles("Meteor");
 
     // PLACE GEMS IN SCENE
-    placeStormParticles('Gem', // Name
+    placeStormParticles("Gem", // Name
     [-3, -1], // Speed
     [-700, 700], // X position
     [2000, 3000], // Y position
@@ -54438,7 +54448,7 @@ function gameStart(shipBody, threeShip, shipShield) {
     );
 
     // PLACE EXTRA LIVES IN SCENE
-    placeStormParticles('ExtraLife', // Name
+    placeStormParticles("ExtraLife", // Name
     [-3, -1], // Speed
     [-300, 300], // X position
     [2000, 3000], // Y position
@@ -54466,15 +54476,15 @@ function gameStart(shipBody, threeShip, shipShield) {
       cannonStorm.forEach(particle => {
         let particleMesh;
 
-        if (particle.name === 'Meteor') {
+        if (particle.name === "Meteor") {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](meteorGeometry, meteorMaterial);
         }
 
-        if (particle.name === 'Gem') {
+        if (particle.name === "Gem") {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](gemGeometry, gemMaterial);
         }
 
-        if (particle.name === 'ExtraLife') {
+        if (particle.name === "ExtraLife") {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](extraLifeGeometry, extraLifeMaterial);
         }
 
@@ -54606,11 +54616,11 @@ for (var i = 0; i < 40; i++) {
 }
 
 // INITIALIZE CANNON DEBUG RENDERER
-// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world)
+// var cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
 
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new __WEBPACK_IMPORTED_MODULE_4__threex_js__["a" /* default */].KeyboardState(renderer.domElement);
-renderer.domElement.setAttribute('tabIndex', '0');
+renderer.domElement.setAttribute("tabIndex", "0");
 renderer.domElement.focus();
 
 // PLACE EXPLOSION IN FRONT OF SHIP
@@ -54664,13 +54674,13 @@ function explode(size, count, explosionPos, color) {
 
 function makeStormParticles(shape, name, number = 100, mass = 5, collisionFilterGroup = METEORS, collisionFilterMask = SHIP | SHOTS) {
   switch (shape) {
-    case 'meteor':
+    case "meteor":
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Box"](new __WEBPACK_IMPORTED_MODULE_1_cannon__["Vec3"](10, 10, 10));
       break;
-    case 'gem':
+    case "gem":
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Sphere"](10);
       break;
-    case 'extraLife':
+    case "extraLife":
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Sphere"](10);
       break;
   }
@@ -54722,7 +54732,7 @@ var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["OBJLoader"]();
 // LOAD A RESOURCE
 loader.load(
 // RESOURCE URL
-'spaceship.obj',
+"spaceship.obj",
 // CALLED WHEN RESOURCE IS LOADED
 function (threeShip) {
   threeShip.scale.set(0.05, 0.05, 0.05);
@@ -54738,7 +54748,7 @@ function (threeShip) {
     }
   });
 
-  threeShip.name = 'Ship';
+  threeShip.name = "Ship";
 
   // ADD SHIELD
   const shieldGeometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](25, 32, 32);
@@ -54762,8 +54772,8 @@ function (threeShip) {
   gameStart(shipBody, threeShip, shipShield);
 
   // ADD COLLIDE EVENT LISTENER
-  shipBody.addEventListener('collide', e => {
-    if (e.body.name === 'Meteor') {
+  shipBody.addEventListener("collide", e => {
+    if (e.body.name === "Meteor") {
       if (lives > 0) {
         if (!shieldMaterial) {
           scene.add(shipShield);
@@ -54775,13 +54785,13 @@ function (threeShip) {
       }
     }
 
-    if (e.body.name === 'Gem') {
+    if (e.body.name === "Gem") {
       bonus += 5000;
       bonusSound.play();
       e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0);
     }
 
-    if (e.body.name === 'ExtraLife') {
+    if (e.body.name === "ExtraLife") {
       if (lives < 6) {
         lives++;
       } else {
@@ -54823,7 +54833,7 @@ function (threeShip) {
 
   // SHOOTING
   let fired = false;
-  window.addEventListener('keydown', function fire(e) {
+  window.addEventListener("keydown", function fire(e) {
     if (!fired && e.keyCode === 32 && shootCount < 10) {
       fired = true;
 
@@ -54843,7 +54853,7 @@ function (threeShip) {
           collisionFilterMask: METEORS
         });
 
-        shotBody.name = 'Shot';
+        shotBody.name = "Shot";
 
         if (i === 0) {
           shotBody.position.x = shipBody.position.x - 2.5;
@@ -54858,7 +54868,7 @@ function (threeShip) {
         cannonShotGroup.children.push(shotBody);
         world.addBody(shotBody);
 
-        shotBody.addEventListener('collide', e => {
+        shotBody.addEventListener("collide", e => {
           const currentCube = e.body;
           meteorExplosionSound.play();
           currentCube.position.set(rand(-1000, 1000), rand(1000, 2000), 0);
@@ -54900,7 +54910,7 @@ function (threeShip) {
     }
 
     // PREVENT MULTIPLE SHOTS ON KEYDOWN
-    window.addEventListener('keyup', e => {
+    window.addEventListener("keyup", e => {
       fired = false;
     });
 
@@ -54912,7 +54922,7 @@ function (threeShip) {
   // MOVE SPACESHIP
   updateFns.push(() => {
     //MOVE TO THE LEFT
-    if (keyboard.pressed('left') && shipBody.position.x > -150) {
+    if (keyboard.pressed("left") && shipBody.position.x > -150) {
       shipBody.position.x -= 4;
 
       // TILT LEFT
@@ -54920,16 +54930,16 @@ function (threeShip) {
         threeShip.rotation.y -= 0.1;
       }
       // MOVE TO THE RIGHT
-    } else if (keyboard.pressed('right') && shipBody.position.x < 150) {
+    } else if (keyboard.pressed("right") && shipBody.position.x < 150) {
       shipBody.position.x += 4;
 
       // TILT RIGHT
       if (threeShip.rotation.y < 1) {
         threeShip.rotation.y += 0.1;
       }
-    } else if (keyboard.pressed('up') && shipBody.position.y < 100) {
+    } else if (keyboard.pressed("up") && shipBody.position.y < 100) {
       shipBody.position.y += 4;
-    } else if (keyboard.pressed('down') && shipBody.position.y > 10) {
+    } else if (keyboard.pressed("down") && shipBody.position.y > 10) {
       shipBody.position.y -= 4;
     } else if (threeShip.rotation.y > 0.5) {
       // RESET LEFT TILT ON KEY UP
@@ -54967,16 +54977,16 @@ function (threeShip) {
 },
 // CALLED WHEN LOADING IS IN PROGRESSES
 function (xhr) {
-  console.log(xhr.loaded / xhr.total * 100 + '% loaded');
+  console.log(xhr.loaded / xhr.total * 100 + "% loaded");
 },
 // CALLED WHEN LOADING HAS ERRORS
 function (error) {
-  console.log('An error happened');
+  console.log("An error happened");
 });
 
 function animate() {
   requestAnimationFrame(animate);
-  // cannonDebugRenderer.update()
+  // cannonDebugRenderer.update();
 
   updatePhysics();
   updateGrid();
@@ -54992,7 +55002,7 @@ function animate() {
 animate();
 
 function updatePhysics() {
-  // cannonDebugRenderer.update()
+  // cannonDebugRenderer.update();
 
   // STEP THE PHYSICS WORLD
   world.step(timeStep);
@@ -55018,9 +55028,9 @@ function updatePhysics() {
     if (lives > 0) {
       // PUT PARTICLE BACK IN STORM
       if (particle.position.y < -10 || particle.position.x > 1000 || particle.position.x < -1000) {
-        if (particle.name === 'Gem') {
+        if (particle.name === "Gem") {
           particle.position.set(rand(-700, 700), rand(1000, 2000), 0);
-        } else if (particle.name === 'ExtraLife') {
+        } else if (particle.name === "ExtraLife") {
           particle.position.set(rand(-300, 300), rand(1000, 2000), 0);
         } else {
           particle.position.set(rand(-1000, 1000), rand(1000, 2000), 0);
@@ -55045,14 +55055,14 @@ function updateGrid() {
 function updateScore() {
   if (countScore === true) {
     score++;
-    document.querySelector('.score').textContent = `Score: ${score + bonus}`;
+    document.querySelector(".score").textContent = `Score: ${score + bonus}`;
   }
 }
 
 // UPDATE LIVES COUNTER
 function updateLives() {
   if (lives > 0) {
-    document.querySelector('.lives').textContent = `Shield: ${lives - 1}`;
+    document.querySelector(".lives").textContent = `Shield: ${lives - 1}`;
   }
 }
 
@@ -55064,7 +55074,7 @@ function render() {
 /* 37 */
 /***/ (function(module, exports) {
 
-module.exports = {"_from":"github:schteppe/cannon.js","_id":"cannon@0.6.2","_inBundle":false,"_integrity":"sha1-BMSAuEozpPQcBgST35CT8A5I/wU=","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"cannon@github:schteppe/cannon.js","name":"cannon","escapedName":"cannon","rawSpec":"github:schteppe/cannon.js","saveSpec":"github:schteppe/cannon.js","fetchSpec":null,"gitCommittish":"master"},"_requiredBy":["#USER","/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"cannon@github:schteppe/cannon.js","_where":"/Users/Staffan/WU16/Exjobb","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"bundleDependencies":false,"dependencies":{},"deprecated":false,"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"}
+module.exports = {"_from":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_id":"cannon@0.6.2","_inBundle":false,"_integrity":"sha1-K5YT+NcHiaSfeNx1AcNrrPHIeEM=","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","name":"cannon","escapedName":"cannon","rawSpec":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","saveSpec":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","fetchSpec":null,"gitCommittish":"569730f94a1d9da47967a24fad0323ef7d5b4119"},"_requiredBy":["/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_where":"/Users/carlaberg/Documents/Carl/code/Sajter/meteor-storm","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"bundleDependencies":false,"dependencies":{},"deprecated":false,"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"}
 
 /***/ }),
 /* 38 */
@@ -65315,234 +65325,6 @@ module.exports = THREE => {
 
     return OBJLoader;
   }();
-};
-
-/***/ }),
-/* 65 */
-/***/ (function(module, exports) {
-
-module.exports = (THREE, CANNON) => {
-  /* global CANNON,THREE,Detector */
-
-  /**
-  * Adds Three.js primitives into the scene where all the Cannon bodies and shapes are.
-  * @class CannonDebugRenderer
-  * @param {THREE.Scene} scene
-  * @param {CANNON.World} world
-  * @param {object} [options]
-  */
-  THREE.CannonDebugRenderer = function (scene, world, options) {
-    options = options || {};
-
-    this.scene = scene;
-    this.world = world;
-
-    this._meshes = [];
-
-    this._material = new THREE.MeshBasicMaterial({
-      color: 0x00ff00,
-      wireframe: true
-    });
-    this._sphereGeometry = new THREE.SphereGeometry(1);
-    this._boxGeometry = new THREE.BoxGeometry(1, 1, 1);
-    this._planeGeometry = new THREE.PlaneGeometry(10, 10, 10, 10);
-    this._cylinderGeometry = new THREE.CylinderGeometry(1, 1, 10, 10);
-  };
-
-  THREE.CannonDebugRenderer.prototype = {
-    tmpVec0: new CANNON.Vec3(),
-    tmpVec1: new CANNON.Vec3(),
-    tmpVec2: new CANNON.Vec3(),
-    tmpQuat0: new CANNON.Vec3(),
-
-    update: function () {
-      var bodies = this.world.bodies;
-      var meshes = this._meshes;
-      var shapeWorldPosition = this.tmpVec0;
-      var shapeWorldQuaternion = this.tmpQuat0;
-
-      var meshIndex = 0;
-
-      for (var i = 0; i !== bodies.length; i++) {
-        var body = bodies[i];
-
-        for (var j = 0; j !== body.shapes.length; j++) {
-          var shape = body.shapes[j];
-
-          this._updateMesh(meshIndex, body, shape);
-
-          var mesh = meshes[meshIndex];
-
-          if (mesh) {
-            // Get world position
-            body.quaternion.vmult(body.shapeOffsets[j], shapeWorldPosition);
-            body.position.vadd(shapeWorldPosition, shapeWorldPosition);
-
-            // Get world quaternion
-            body.quaternion.mult(body.shapeOrientations[j], shapeWorldQuaternion);
-
-            // Copy to meshes
-            mesh.position.copy(shapeWorldPosition);
-            mesh.quaternion.copy(shapeWorldQuaternion);
-          }
-
-          meshIndex++;
-        }
-      }
-
-      for (var i = meshIndex; i < meshes.length; i++) {
-        var mesh = meshes[i];
-        if (mesh) {
-          this.scene.remove(mesh);
-        }
-      }
-
-      meshes.length = meshIndex;
-    },
-
-    _updateMesh: function (index, body, shape) {
-      var mesh = this._meshes[index];
-      if (!this._typeMatch(mesh, shape)) {
-        if (mesh) {
-          this.scene.remove(mesh);
-        }
-        mesh = this._meshes[index] = this._createMesh(shape);
-      }
-      this._scaleMesh(mesh, shape);
-    },
-
-    _typeMatch: function (mesh, shape) {
-      if (!mesh) {
-        return false;
-      }
-      var geo = mesh.geometry;
-      return geo instanceof THREE.SphereGeometry && shape instanceof CANNON.Sphere || geo instanceof THREE.BoxGeometry && shape instanceof CANNON.Box || geo instanceof THREE.PlaneGeometry && shape instanceof CANNON.Plane || geo.id === shape.geometryId && shape instanceof CANNON.ConvexPolyhedron || geo.id === shape.geometryId && shape instanceof CANNON.Trimesh || geo.id === shape.geometryId && shape instanceof CANNON.Heightfield;
-    },
-
-    _createMesh: function (shape) {
-      var mesh;
-      var material = this._material;
-
-      switch (shape.type) {
-        case CANNON.Shape.types.SPHERE:
-          mesh = new THREE.Mesh(this._sphereGeometry, material);
-          break;
-
-        case CANNON.Shape.types.BOX:
-          mesh = new THREE.Mesh(this._boxGeometry, material);
-          break;
-
-        case CANNON.Shape.types.PLANE:
-          mesh = new THREE.Mesh(this._planeGeometry, material);
-          break;
-
-        case CANNON.Shape.types.CONVEXPOLYHEDRON:
-          // Create mesh
-          var geo = new THREE.Geometry();
-
-          // Add vertices
-          for (var i = 0; i < shape.vertices.length; i++) {
-            var v = shape.vertices[i];
-            geo.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
-          }
-
-          for (var i = 0; i < shape.faces.length; i++) {
-            var face = shape.faces[i];
-
-            // add triangles
-            var a = face[0];
-            for (var j = 1; j < face.length - 1; j++) {
-              var b = face[j];
-              var c = face[j + 1];
-              geo.faces.push(new THREE.Face3(a, b, c));
-            }
-          }
-          geo.computeBoundingSphere();
-          geo.computeFaceNormals();
-
-          mesh = new THREE.Mesh(geo, material);
-          shape.geometryId = geo.id;
-          break;
-
-        case CANNON.Shape.types.TRIMESH:
-          var geometry = new THREE.Geometry();
-          var v0 = this.tmpVec0;
-          var v1 = this.tmpVec1;
-          var v2 = this.tmpVec2;
-          for (var i = 0; i < shape.indices.length / 3; i++) {
-            shape.getTriangleVertices(i, v0, v1, v2);
-            geometry.vertices.push(new THREE.Vector3(v0.x, v0.y, v0.z), new THREE.Vector3(v1.x, v1.y, v1.z), new THREE.Vector3(v2.x, v2.y, v2.z));
-            var j = geometry.vertices.length - 3;
-            geometry.faces.push(new THREE.Face3(j, j + 1, j + 2));
-          }
-          geometry.computeBoundingSphere();
-          geometry.computeFaceNormals();
-          mesh = new THREE.Mesh(geometry, material);
-          shape.geometryId = geometry.id;
-          break;
-
-        case CANNON.Shape.types.HEIGHTFIELD:
-          var geometry = new THREE.Geometry();
-
-          var v0 = this.tmpVec0;
-          var v1 = this.tmpVec1;
-          var v2 = this.tmpVec2;
-          for (var xi = 0; xi < shape.data.length - 1; xi++) {
-            for (var yi = 0; yi < shape.data[xi].length - 1; yi++) {
-              for (var k = 0; k < 2; k++) {
-                shape.getConvexTrianglePillar(xi, yi, k === 0);
-                v0.copy(shape.pillarConvex.vertices[0]);
-                v1.copy(shape.pillarConvex.vertices[1]);
-                v2.copy(shape.pillarConvex.vertices[2]);
-                v0.vadd(shape.pillarOffset, v0);
-                v1.vadd(shape.pillarOffset, v1);
-                v2.vadd(shape.pillarOffset, v2);
-                geometry.vertices.push(new THREE.Vector3(v0.x, v0.y, v0.z), new THREE.Vector3(v1.x, v1.y, v1.z), new THREE.Vector3(v2.x, v2.y, v2.z));
-                var i = geometry.vertices.length - 3;
-                geometry.faces.push(new THREE.Face3(i, i + 1, i + 2));
-              }
-            }
-          }
-          geometry.computeBoundingSphere();
-          geometry.computeFaceNormals();
-          mesh = new THREE.Mesh(geometry, material);
-          shape.geometryId = geometry.id;
-          break;
-      }
-
-      if (mesh) {
-        this.scene.add(mesh);
-      }
-
-      return mesh;
-    },
-
-    _scaleMesh: function (mesh, shape) {
-      switch (shape.type) {
-        case CANNON.Shape.types.SPHERE:
-          var radius = shape.radius;
-          mesh.scale.set(radius, radius, radius);
-          break;
-
-        case CANNON.Shape.types.BOX:
-          mesh.scale.copy(shape.halfExtents);
-          mesh.scale.multiplyScalar(2);
-          break;
-
-        case CANNON.Shape.types.CONVEXPOLYHEDRON:
-          mesh.scale.set(1, 1, 1);
-          break;
-
-        case CANNON.Shape.types.TRIMESH:
-          mesh.scale.copy(shape.scale);
-          break;
-
-        case CANNON.Shape.types.HEIGHTFIELD:
-          mesh.scale.set(1, 1, 1);
-          break;
-      }
-    }
-  };
 };
 
 /***/ })
