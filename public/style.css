@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+*:focus {
+  outline: none;
+}
+
 body {
   display: flex;
   justify-content: center;
@@ -20,6 +24,35 @@ canvas {
 
 p {
   margin: 0;
+}
+
+form {
+  display: flex;
+  align-items: center;
+  max-width: 500px;
+  justify-content: center;
+  margin: 30px 0;
+}
+
+input[type='text'] {
+  max-width: 400px;
+  height: 50px;
+  background-color: transparent;
+  font-size: 36px;
+  color: white;
+  font-family: 'Bungee Hairline';
+  border: none;
+  border-bottom: 1px solid #ffea49;
+}
+
+button {
+  height: 50px;
+  line-height: 20px;
+  font-size: 20px;
+  background-color: #ffea48;
+  border: none;
+  border-radius: 0;
+  font-family: 'Bungee Hairline';
 }
 
 .welcome {
@@ -51,8 +84,10 @@ p {
   opacity: 0;
 }
 
+.remove,
 .welcome.remove,
-.game-over.remove {
+.game-over.remove,
+.high-score.remove {
   display: none;
 }
 
@@ -81,17 +116,33 @@ p {
   text-align: right;
 }
 
-.game-over {
+.game-over,
+.high-score {
   display: flex;
   flex-direction: column;
   align-items: center;
-  top: 30%;
   position: fixed;
   text-align: center;
   transition: opacity 1s;
   font-size: 36px;
   text-align: center;
   z-index: 1;
+}
+
+.game-over {
+  top: 25%;
+}
+
+.high-score {
+  top: 10%;
+}
+
+.high-score ol {
+  width: 100%;
+  list-style-position: inside;
+  list-style-type: decimal-leading-zero;
+  margin: 0;
+  font-size: 28px;
 }
 
 .large {
