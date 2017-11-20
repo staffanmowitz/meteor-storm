@@ -54206,12 +54206,15 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_three_to_cannon__ = __webpack_require__(61);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_three_to_cannon___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_three_to_cannon__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__threex_js__ = __webpack_require__(63);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__firebase_js__ = __webpack_require__(64);
 
 
 
 
 
-__webpack_require__(64)(__WEBPACK_IMPORTED_MODULE_0_three__);
+
+
+__webpack_require__(65)(__WEBPACK_IMPORTED_MODULE_0_three__);
 // require("./cannondebugrenderer.js")(THREE, CANNON);
 
 function rand(min, max) {
@@ -54248,6 +54251,8 @@ let shootCount = 0;
 
 let introDone = false;
 
+let highScores = Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["a" /* retrieveHighScores */])();
+
 // FILTER GROUPS
 const SHIP = 1;
 const METEORS = 2;
@@ -54256,135 +54261,180 @@ const GEMS = 4;
 const LIVES = 5;
 
 // ADD SOUND EFFECTS
-const laserSound = new Howl({ src: "laser.mp3" });
-const bonusSound = new Howl({ src: "bonus.mp3" });
-const lifeSound = new Howl({ src: "life.mp3" });
-const crashSound = new Howl({ src: "crash.mp3" });
-const dieSound = new Howl({ src: "die.mp3" });
-const meteorExplosionSound = new Howl({ src: "meteor_explosion.mp3" });
+const laserSound = new Howl({ src: 'laser.mp3' });
+const bonusSound = new Howl({ src: 'bonus.mp3' });
+const lifeSound = new Howl({ src: 'life.mp3' });
+const crashSound = new Howl({ src: 'crash.mp3' });
+const dieSound = new Howl({ src: 'die.mp3' });
+const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' });
 const music = new Howl({
-  src: "meteor_storm_theme.mp3",
+  src: 'meteor_storm_theme.mp3',
   loop: true,
   autoplay: true
 });
 
 const musicMelody = new Howl({
-  src: "meteor_storm_melody.mp3",
+  src: 'meteor_storm_melody.mp3',
   loop: true
 });
 
 // ADD WELCOME SCREEN
-const welcomeContainer = document.createElement("div");
-welcomeContainer.classList.add("welcome");
+const welcomeContainer = document.createElement('div');
+welcomeContainer.classList.add('welcome');
 document.body.appendChild(welcomeContainer);
 
 // ADD LOGO
-const logoContainer = document.createElement("div");
-const logo = document.createTextNode("Meteor Storm");
+const logoContainer = document.createElement('div');
+const logo = document.createTextNode('Meteor Storm');
 logoContainer.appendChild(logo);
 welcomeContainer.appendChild(logoContainer);
 
 // ADD PLAY BUTTON
-const playContainer = document.createElement("div");
-playContainer.classList.add("play");
-const playParagraph = document.createElement("p");
-const play = document.createTextNode("Play");
+const playContainer = document.createElement('div');
+playContainer.classList.add('play');
+const playParagraph = document.createElement('p');
+const play = document.createTextNode('Play');
 
 playParagraph.appendChild(play);
 playContainer.appendChild(playParagraph);
 welcomeContainer.appendChild(playContainer);
 
 // ADD COUNTER CONTAINER
-const counterContainer = document.createElement("div");
-counterContainer.classList.add("counters", "hide");
+const counterContainer = document.createElement('div');
+counterContainer.classList.add('counters', 'hide');
 document.body.appendChild(counterContainer);
 
 // ADD COUNTERS
 function addCounter(counterName, counterText, variable) {
-  const container = document.createElement("div");
+  const container = document.createElement('div');
   container.classList.add(counterName);
   let content = document.createTextNode(`${counterText}: ${score}`);
   container.appendChild(content);
   counterContainer.appendChild(container);
 }
 
-addCounter("score", "Score", score);
-addCounter("lives", "Shield", lives);
+addCounter('score', 'Score', score);
+addCounter('lives', 'Shield', lives);
 
 // ADD GAME OVER SCREEN
-const gameOverContainer = document.createElement("div");
-gameOverContainer.classList.add("game-over", "remove");
+const gameOverContainer = document.createElement('div');
+gameOverContainer.classList.add('game-over', 'remove');
 document.body.appendChild(gameOverContainer);
 
-const playAgainContainer = document.createElement("div");
-playAgainContainer.classList.add("play");
+const playAgainContainer = document.createElement('div');
+playAgainContainer.classList.add('play');
 
-const gameOverParagraph = document.createElement("p");
-gameOverParagraph.classList.add("large");
-const gameOverText = document.createTextNode("Game Over");
+const gameOverParagraph = document.createElement('p');
+gameOverParagraph.classList.add('large');
+const gameOverText = document.createTextNode('Game Over');
 gameOverParagraph.appendChild(gameOverText);
 gameOverContainer.appendChild(gameOverParagraph);
 
-const scoreParagraph = document.createElement("p");
-let scoreText = document.createTextNode("Your Score:");
+const scoreParagraph = document.createElement('p');
+let scoreText = document.createTextNode('Your Score:');
 scoreParagraph.appendChild(scoreText);
 gameOverContainer.appendChild(scoreParagraph);
 
-const playAgainParagraph = document.createElement("p");
-const playAgain = document.createTextNode("Play Again");
+const scoreForm = document.createElement('form');
+
+const nameInput = document.createElement('input');
+nameInput.type = 'text';
+nameInput.placeholder = 'Enter name';
+nameInput.maxLength = 6;
+nameInput.required = true;
+scoreForm.appendChild(nameInput);
+
+const formButton = document.createElement('button');
+formButton.innerHTML = 'Save score';
+scoreForm.appendChild(formButton);
+
+scoreForm.addEventListener('submit', e => {
+  e.preventDefault();
+  let name = nameInput.value;
+  Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
+  scoreForm.classList.add('hide');
+  printHighScores();
+});
+gameOverContainer.appendChild(scoreForm);
+
+const playAgainParagraph = document.createElement('p');
+const playAgain = document.createTextNode('Play Again');
 playAgainParagraph.appendChild(playAgain);
 playAgainContainer.appendChild(playAgainParagraph);
 gameOverContainer.appendChild(playAgainContainer);
 
-// END GAME
-function gameOver(shipBody, threeShip) {
-  // musicMelody.fade(1, 0, 1000);
-  musicMelody.stop();
-  music.play();
-  explode(4, 100, threeShip.position, 0xffffff);
-  world.removeBody(shipBody);
-  scene.remove(threeShip);
-  countScore = false;
+const highScoreContainer = document.createElement('div');
+highScoreContainer.classList.add('high-score', 'remove');
+document.body.appendChild(highScoreContainer);
 
-  gameOverContainer.classList.remove("remove");
+const highScoreParagraph = document.createElement('p');
+highScoreParagraph.classList.add('large');
+const highScoreText = document.createTextNode('High Scores');
+highScoreParagraph.appendChild(highScoreText);
+highScoreContainer.appendChild(highScoreParagraph);
+
+const highScoreList = document.createElement('ol');
+highScoreList.classList.add('high-score-list');
+highScoreContainer.appendChild(highScoreList);
+
+highScoreContainer.appendChild(playAgainContainer.cloneNode(true));
+
+// HIGH SCORES
+function printHighScores() {
+  // EMPTY HIGH SCORE LIST
+  highScoreList.innerHTML = '';
+
+  // FILL LIST WITH HIGH SCORES
+  highScores.forEach(score => {
+    const listItem = document.createElement('li');
+    const listText = document.createTextNode(`${score.name} ${score.score}`);
+    listItem.appendChild(listText);
+    highScoreList.appendChild(listItem);
+  });
+
+  // HIDE GAMEOVER CONTAINER
+  gameOverContainer.classList.add('hide');
   setTimeout(() => {
-    gameOverContainer.classList.remove("hide");
-  }, 100);
+    gameOverContainer.classList.add('remove');
+  }, 1000);
 
-  stopReload();
-
-  counterContainer.classList.add("hide");
-
-  scoreText.nodeValue = `Your Score: ${score + bonus}`;
-
-  introDone = false;
+  // SHOW HIGH SCORE CONTAINER
+  highScoreContainer.classList.remove('remove');
+  setTimeout(() => {
+    highScoreContainer.classList.remove('hide');
+  }, 1000);
 }
 
 // START GAME
 function gameStart(shipBody, threeShip, shipShield) {
-  let playButtons = document.querySelectorAll(".play p");
+  let playButtons = document.querySelectorAll('.play p');
   playButtons = Array.from(playButtons);
-  playButtons.forEach(playButton => playButton.addEventListener("click", e => {
+  playButtons.forEach(playButton => playButton.addEventListener('click', e => {
     music.stop();
     // musicMelody.fade(0, 1, 1000);
     musicMelody.play();
-    welcomeContainer.classList.add("hide");
+    welcomeContainer.classList.add('hide');
     setTimeout(() => {
-      welcomeContainer.classList.add("remove");
+      welcomeContainer.classList.add('remove');
     }, 1000);
 
-    gameOverContainer.classList.add("hide");
+    gameOverContainer.classList.add('hide');
     setTimeout(() => {
-      gameOverContainer.classList.add("remove");
+      gameOverContainer.classList.add('remove');
+    }, 1000);
+
+    highScoreContainer.classList.add('hide');
+    setTimeout(() => {
+      highScoreContainer.classList.add('remove');
     }, 1000);
 
     renderer.domElement.focus();
 
-    counterContainer.classList.remove("hide");
+    counterContainer.classList.remove('hide');
 
     startReload();
 
-    if (!scene.getObjectByName("Ship")) {
+    if (!scene.getObjectByName('Ship')) {
       world.addBody(shipBody);
       scene.add(threeShip);
       scene.add(shipShield);
@@ -54412,11 +54462,11 @@ function gameStart(shipBody, threeShip, shipShield) {
     // CREATE STORM!
     if (cannonStorm.length === 0) {
       // CREATE 100 CANNON.JS METEORS
-      makeStormParticles("meteor", "Meteor");
+      makeStormParticles('meteor', 'Meteor');
 
       // CREATE 10 CANNON.JS GEMS
-      makeStormParticles("gem", // Shape
-      "Gem", // Name
+      makeStormParticles('gem', // Shape
+      'Gem', // Name
       10, // Number
       2, // Mass
       GEMS, // Collision filter group
@@ -54424,8 +54474,8 @@ function gameStart(shipBody, threeShip, shipShield) {
       );
 
       // CREATE 2 CANNON.JS EXTRA LIVES
-      makeStormParticles("extraLife", // Shape
-      "ExtraLife", // Name
+      makeStormParticles('extraLife', // Shape
+      'ExtraLife', // Name
       2, // Number
       2, // Mass
       LIVES, // Collision filter group
@@ -54434,10 +54484,10 @@ function gameStart(shipBody, threeShip, shipShield) {
     }
 
     // PLACE METEORS IN SCENE
-    placeStormParticles("Meteor");
+    placeStormParticles('Meteor');
 
     // PLACE GEMS IN SCENE
-    placeStormParticles("Gem", // Name
+    placeStormParticles('Gem', // Name
     [-3, -1], // Speed
     [-700, 700], // X position
     [2000, 3000], // Y position
@@ -54448,7 +54498,7 @@ function gameStart(shipBody, threeShip, shipShield) {
     );
 
     // PLACE EXTRA LIVES IN SCENE
-    placeStormParticles("ExtraLife", // Name
+    placeStormParticles('ExtraLife', // Name
     [-3, -1], // Speed
     [-300, 300], // X position
     [2000, 3000], // Y position
@@ -54476,15 +54526,15 @@ function gameStart(shipBody, threeShip, shipShield) {
       cannonStorm.forEach(particle => {
         let particleMesh;
 
-        if (particle.name === "Meteor") {
+        if (particle.name === 'Meteor') {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](meteorGeometry, meteorMaterial);
         }
 
-        if (particle.name === "Gem") {
+        if (particle.name === 'Gem') {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](gemGeometry, gemMaterial);
         }
 
-        if (particle.name === "ExtraLife") {
+        if (particle.name === 'ExtraLife') {
           particleMesh = new __WEBPACK_IMPORTED_MODULE_0_three__["Mesh"](extraLifeGeometry, extraLifeMaterial);
         }
 
@@ -54509,6 +54559,34 @@ function gameStart(shipBody, threeShip, shipShield) {
 
     countScore = true;
   }));
+}
+
+// END GAME
+function gameOver(shipBody, threeShip) {
+  // musicMelody.fade(1, 0, 1000);
+  musicMelody.stop();
+  music.play();
+  explode(4, 100, threeShip.position, 0xffffff);
+  world.removeBody(shipBody);
+  scene.remove(threeShip);
+  countScore = false;
+
+  gameOverContainer.classList.remove('remove');
+  setTimeout(() => {
+    gameOverContainer.classList.remove('hide');
+  }, 100);
+
+  scoreForm.classList.remove('hide');
+  nameInput.value = '';
+  nameInput.focus();
+
+  stopReload();
+
+  counterContainer.classList.add('hide');
+
+  scoreText.nodeValue = `Your Score: ${score + bonus}`;
+
+  introDone = false;
 }
 
 // CREATE THREE SCENE
@@ -54620,7 +54698,7 @@ for (var i = 0; i < 40; i++) {
 
 // INITIALIZE KEYBOARD CONTROLS
 var keyboard = new __WEBPACK_IMPORTED_MODULE_4__threex_js__["a" /* default */].KeyboardState(renderer.domElement);
-renderer.domElement.setAttribute("tabIndex", "0");
+renderer.domElement.setAttribute('tabIndex', '0');
 renderer.domElement.focus();
 
 // PLACE EXPLOSION IN FRONT OF SHIP
@@ -54674,13 +54752,13 @@ function explode(size, count, explosionPos, color) {
 
 function makeStormParticles(shape, name, number = 100, mass = 5, collisionFilterGroup = METEORS, collisionFilterMask = SHIP | SHOTS) {
   switch (shape) {
-    case "meteor":
+    case 'meteor':
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Box"](new __WEBPACK_IMPORTED_MODULE_1_cannon__["Vec3"](10, 10, 10));
       break;
-    case "gem":
+    case 'gem':
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Sphere"](10);
       break;
-    case "extraLife":
+    case 'extraLife':
       shape = new __WEBPACK_IMPORTED_MODULE_1_cannon__["Sphere"](10);
       break;
   }
@@ -54732,7 +54810,7 @@ var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["OBJLoader"]();
 // LOAD A RESOURCE
 loader.load(
 // RESOURCE URL
-"spaceship.obj",
+'spaceship.obj',
 // CALLED WHEN RESOURCE IS LOADED
 function (threeShip) {
   threeShip.scale.set(0.05, 0.05, 0.05);
@@ -54748,7 +54826,7 @@ function (threeShip) {
     }
   });
 
-  threeShip.name = "Ship";
+  threeShip.name = 'Ship';
 
   // ADD SHIELD
   const shieldGeometry = new __WEBPACK_IMPORTED_MODULE_0_three__["SphereGeometry"](25, 32, 32);
@@ -54772,8 +54850,8 @@ function (threeShip) {
   gameStart(shipBody, threeShip, shipShield);
 
   // ADD COLLIDE EVENT LISTENER
-  shipBody.addEventListener("collide", e => {
-    if (e.body.name === "Meteor") {
+  shipBody.addEventListener('collide', e => {
+    if (e.body.name === 'Meteor') {
       if (lives > 0) {
         if (!shieldMaterial) {
           scene.add(shipShield);
@@ -54785,13 +54863,13 @@ function (threeShip) {
       }
     }
 
-    if (e.body.name === "Gem") {
+    if (e.body.name === 'Gem') {
       bonus += 5000;
       bonusSound.play();
       e.body.position.set(rand(-1000, 1000), rand(2000, 2500), 0);
     }
 
-    if (e.body.name === "ExtraLife") {
+    if (e.body.name === 'ExtraLife') {
       if (lives < 6) {
         lives++;
       } else {
@@ -54833,7 +54911,7 @@ function (threeShip) {
 
   // SHOOTING
   let fired = false;
-  window.addEventListener("keydown", function fire(e) {
+  window.addEventListener('keydown', function fire(e) {
     if (!fired && e.keyCode === 32 && shootCount < 10) {
       fired = true;
 
@@ -54853,7 +54931,7 @@ function (threeShip) {
           collisionFilterMask: METEORS
         });
 
-        shotBody.name = "Shot";
+        shotBody.name = 'Shot';
 
         if (i === 0) {
           shotBody.position.x = shipBody.position.x - 2.5;
@@ -54868,7 +54946,7 @@ function (threeShip) {
         cannonShotGroup.children.push(shotBody);
         world.addBody(shotBody);
 
-        shotBody.addEventListener("collide", e => {
+        shotBody.addEventListener('collide', e => {
           const currentCube = e.body;
           meteorExplosionSound.play();
           currentCube.position.set(rand(-1000, 1000), rand(1000, 2000), 0);
@@ -54910,7 +54988,7 @@ function (threeShip) {
     }
 
     // PREVENT MULTIPLE SHOTS ON KEYDOWN
-    window.addEventListener("keyup", e => {
+    window.addEventListener('keyup', e => {
       fired = false;
     });
 
@@ -54922,7 +55000,7 @@ function (threeShip) {
   // MOVE SPACESHIP
   updateFns.push(() => {
     //MOVE TO THE LEFT
-    if (keyboard.pressed("left") && shipBody.position.x > -150) {
+    if (keyboard.pressed('left') && shipBody.position.x > -150) {
       shipBody.position.x -= 4;
 
       // TILT LEFT
@@ -54930,16 +55008,16 @@ function (threeShip) {
         threeShip.rotation.y -= 0.1;
       }
       // MOVE TO THE RIGHT
-    } else if (keyboard.pressed("right") && shipBody.position.x < 150) {
+    } else if (keyboard.pressed('right') && shipBody.position.x < 150) {
       shipBody.position.x += 4;
 
       // TILT RIGHT
       if (threeShip.rotation.y < 1) {
         threeShip.rotation.y += 0.1;
       }
-    } else if (keyboard.pressed("up") && shipBody.position.y < 100) {
+    } else if (keyboard.pressed('up') && shipBody.position.y < 100) {
       shipBody.position.y += 4;
-    } else if (keyboard.pressed("down") && shipBody.position.y > 10) {
+    } else if (keyboard.pressed('down') && shipBody.position.y > 10) {
       shipBody.position.y -= 4;
     } else if (threeShip.rotation.y > 0.5) {
       // RESET LEFT TILT ON KEY UP
@@ -54977,11 +55055,11 @@ function (threeShip) {
 },
 // CALLED WHEN LOADING IS IN PROGRESSES
 function (xhr) {
-  console.log(xhr.loaded / xhr.total * 100 + "% loaded");
+  console.log(xhr.loaded / xhr.total * 100 + '% loaded');
 },
 // CALLED WHEN LOADING HAS ERRORS
 function (error) {
-  console.log("An error happened");
+  console.log('An error happened');
 });
 
 function animate() {
@@ -55028,9 +55106,9 @@ function updatePhysics() {
     if (lives > 0) {
       // PUT PARTICLE BACK IN STORM
       if (particle.position.y < -10 || particle.position.x > 1000 || particle.position.x < -1000) {
-        if (particle.name === "Gem") {
+        if (particle.name === 'Gem') {
           particle.position.set(rand(-700, 700), rand(1000, 2000), 0);
-        } else if (particle.name === "ExtraLife") {
+        } else if (particle.name === 'ExtraLife') {
           particle.position.set(rand(-300, 300), rand(1000, 2000), 0);
         } else {
           particle.position.set(rand(-1000, 1000), rand(1000, 2000), 0);
@@ -55055,14 +55133,14 @@ function updateGrid() {
 function updateScore() {
   if (countScore === true) {
     score++;
-    document.querySelector(".score").textContent = `Score: ${score + bonus}`;
+    document.querySelector('.score').textContent = `Score: ${score + bonus}`;
   }
 }
 
 // UPDATE LIVES COUNTER
 function updateLives() {
   if (lives > 0) {
-    document.querySelector(".lives").textContent = `Shield: ${lives - 1}`;
+    document.querySelector('.lives').textContent = `Shield: ${lives - 1}`;
   }
 }
 
@@ -55074,7 +55152,7 @@ function render() {
 /* 37 */
 /***/ (function(module, exports) {
 
-module.exports = {"_from":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_id":"cannon@0.6.2","_inBundle":false,"_integrity":"sha1-K5YT+NcHiaSfeNx1AcNrrPHIeEM=","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","name":"cannon","escapedName":"cannon","rawSpec":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","saveSpec":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","fetchSpec":null,"gitCommittish":"569730f94a1d9da47967a24fad0323ef7d5b4119"},"_requiredBy":["/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"cannon@github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_where":"/Users/carlaberg/Documents/Carl/code/Sajter/meteor-storm","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"bundleDependencies":false,"dependencies":{},"deprecated":false,"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"}
+module.exports = {"_from":"github:schteppe/cannon.js","_id":"cannon@0.6.2","_inBundle":false,"_integrity":"sha1-BMSAuEozpPQcBgST35CT8A5I/wU=","_location":"/cannon","_phantomChildren":{},"_requested":{"type":"git","raw":"cannon@github:schteppe/cannon.js","name":"cannon","escapedName":"cannon","rawSpec":"github:schteppe/cannon.js","saveSpec":"github:schteppe/cannon.js","fetchSpec":null,"gitCommittish":"master"},"_requiredBy":["#USER","/"],"_resolved":"github:schteppe/cannon.js#569730f94a1d9da47967a24fad0323ef7d5b4119","_spec":"cannon@github:schteppe/cannon.js","_where":"/Users/Staffan/WU16/Exjobb","author":{"name":"Stefan Hedman","email":"schteppe@gmail.com","url":"http://steffe.se"},"bugs":{"url":"https://github.com/schteppe/cannon.js/issues"},"bundleDependencies":false,"dependencies":{},"deprecated":false,"description":"A lightweight 3D physics engine written in JavaScript.","devDependencies":{"browserify":"*","grunt":"~0.4.0","grunt-browserify":"^2.1.4","grunt-contrib-concat":"~0.1.3","grunt-contrib-jshint":"~0.1.1","grunt-contrib-nodeunit":"^0.4.1","grunt-contrib-uglify":"^0.5.1","grunt-contrib-yuidoc":"^0.5.2","jshint":"latest","nodeunit":"^0.9.0","uglify-js":"latest"},"engines":{"node":"*"},"homepage":"https://github.com/schteppe/cannon.js","keywords":["cannon.js","cannon","physics","engine","3d"],"licenses":[{"type":"MIT"}],"main":"./src/Cannon.js","name":"cannon","repository":{"type":"git","url":"git+https://github.com/schteppe/cannon.js.git"},"version":"0.6.2"}
 
 /***/ }),
 /* 38 */
@@ -64776,6 +64854,54 @@ THREEx.LaserBeam = function () {
 
 /***/ }),
 /* 64 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (immutable) */ __webpack_exports__["b"] = saveHighScore;
+/* harmony export (immutable) */ __webpack_exports__["a"] = retrieveHighScores;
+// INITIALIZE FIREBASE
+const config = {
+  apiKey: 'AIzaSyD3aI7qkxThZe4YvjUaYJwuaIuUXzNWZ7Q',
+  authDomain: 'meteor-storm-ccb14.firebaseapp.com',
+  databaseURL: 'https://meteor-storm-ccb14.firebaseio.com',
+  projectId: 'meteor-storm-ccb14',
+  storageBucket: 'meteor-storm-ccb14.appspot.com',
+  messagingSenderId: '147457187379'
+};
+firebase.initializeApp(config);
+
+firebase.auth().signInAnonymously().catch(function (error) {
+  let errorCode = error.code;
+  let errorMessage = error.message;
+});
+
+const database = firebase.database();
+/* unused harmony export database */
+
+
+function saveHighScore(name, score) {
+  firebase.database().ref('highscores/' + Date.now()).set({
+    name: name,
+    score: score
+  });
+}
+
+function retrieveHighScores() {
+  let highScores = [];
+  firebase.database().ref('highscores/').orderByChild('score').limitToLast(10).once('value', scores => {
+    scores.forEach(score => {
+      highScores.push(score.val());
+    });
+    highScores = highScores.sort((a, b) => {
+      return a.score > b.score ? -1 : 1;
+    });
+  });
+
+  return highScores;
+}
+
+/***/ }),
+/* 65 */
 /***/ (function(module, exports) {
 
 module.exports = THREE => {
