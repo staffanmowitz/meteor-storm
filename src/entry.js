@@ -169,8 +169,10 @@ scoreForm.addEventListener('submit', e => {
   e.preventDefault()
   let name = nameInput.value
 
-  saveHighScore(name, score + bonus)
-  scoreForm.classList.add('hide')
+  if (name.lenght > 0 || name.lenght <= 6) {
+    saveHighScore(name, score + bonus)
+    scoreForm.classList.add('hide')
+  }
 
   // RESET AND RETRIEVE HIGH SCORES
   highScores = []

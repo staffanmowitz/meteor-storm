@@ -42,7 +42,9 @@ input[type='text'] {
   color: white;
   font-family: 'Bungee Hairline';
   border: none;
-  border-bottom: 1px solid #ffea49;
+  border: 1px solid #ffea49;
+  border-right: none;
+  padding: 0 10px;
 }
 
 button {
