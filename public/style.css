@@ -50,27 +50,57 @@ button {
   line-height: 20px;
   font-size: 20px;
   background-color: #ffea48;
-  border: none;
+  border: 1px solid #ffea48;
   border-radius: 0;
   font-family: 'Bungee Hairline';
+}
+
+button:hover {
+  background-color: #000;
+  color: #ffea48;
+}
+
+.large {
+  font-size: 96px;
+  margin: 0;
 }
 
 .welcome {
   display: flex;
   flex-direction: column;
   align-items: center;
-  top: 30%;
+  top: 25%;
   position: fixed;
   text-align: center;
   font-size: 96px;
   transition: opacity 1s;
 }
 
+.controls {
+  /*border: 1px solid white;*/
+  margin-top: 80px;
+  width: 100%;
+  font-size: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+figure {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  margin: 0 30px;
+}
+
+figcaption {
+  margin-top: 10px;
+}
+
 .play {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 30px;
+  margin-top: 40px;
   height: 60px;
   padding: 10px;
   background: #000;
@@ -78,6 +108,13 @@ button {
   color: #4ef7da;
   font-size: 50px;
   cursor: pointer;
+  transition: all 0.3s;
+}
+
+.play:hover {
+  background: #4ef7da;
+  color: #000;
+  border: 1px solid #4ef7da;
 }
 
 .hide {
@@ -143,9 +180,4 @@ button {
   list-style-type: decimal-leading-zero;
   margin: 0;
   font-size: 28px;
-}
-
-.large {
-  font-size: 96px;
-  margin: 0;
 }
