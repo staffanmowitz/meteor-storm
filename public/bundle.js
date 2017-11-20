@@ -54236,7 +54236,7 @@ let timeStep = 1 / 60;
 
 let score = 0;
 let bonus = 0;
-let lives = 1;
+let lives = 6;
 
 let countScore = false;
 
@@ -54300,6 +54300,30 @@ const play = document.createTextNode('Play');
 playParagraph.appendChild(play);
 playContainer.appendChild(playParagraph);
 welcomeContainer.appendChild(playContainer);
+
+// ADD CONTROL IMAGES
+const controlsContainer = document.createElement('div');
+controlsContainer.classList.add('controls');
+
+const spaceContainer = document.createElement('figure');
+const spaceImg = document.createElement('img');
+spaceImg.src = 'space.svg';
+const spaceCaption = document.createElement('figcaption');
+spaceCaption.innerHTML = 'Fire!';
+spaceContainer.appendChild(spaceImg);
+spaceContainer.appendChild(spaceCaption);
+controlsContainer.appendChild(spaceContainer);
+
+const arrowsContainer = document.createElement('figure');
+const arrowsImg = document.createElement('img');
+arrowsImg.src = 'arrows.svg';
+const arrowsCaption = document.createElement('figcaption');
+arrowsCaption.innerHTML = 'Steer';
+arrowsContainer.appendChild(arrowsImg);
+arrowsContainer.appendChild(arrowsCaption);
+controlsContainer.appendChild(arrowsContainer);
+
+welcomeContainer.appendChild(controlsContainer);
 
 // ADD COUNTER CONTAINER
 const counterContainer = document.createElement('div');
