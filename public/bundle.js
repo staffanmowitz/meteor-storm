@@ -54236,7 +54236,7 @@ let timeStep = 1 / 60;
 
 let score = 0;
 let bonus = 0;
-let lives = 6;
+let lives = 1;
 
 let countScore = false;
 
@@ -54251,7 +54251,7 @@ let shootCount = 0;
 
 let introDone = false;
 
-let highScores = Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["a" /* retrieveHighScores */])();
+let highScores;
 
 // FILTER GROUPS
 const SHIP = 1;
@@ -54269,9 +54269,11 @@ const dieSound = new Howl({ src: 'die.mp3' });
 const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' });
 const music = new Howl({
   src: 'meteor_storm_theme.mp3',
-  loop: true,
-  autoplay: true
+  loop: true
 });
+
+music.play();
+music.fade(0, 1, 500);
 
 const musicMelody = new Howl({
   src: 'meteor_storm_melody.mp3',
@@ -54351,8 +54353,14 @@ scoreForm.appendChild(formButton);
 scoreForm.addEventListener('submit', e => {
   e.preventDefault();
   let name = nameInput.value;
+
   Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
   scoreForm.classList.add('hide');
+
+  // RESET AND RETRIEVE HIGH SCORES
+  highScores = [];
+  highScores = Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["a" /* retrieveHighScores */])();
+
   printHighScores();
 });
 gameOverContainer.appendChild(scoreForm);
@@ -54587,6 +54595,9 @@ function gameOver(shipBody, threeShip) {
   scoreText.nodeValue = `Your Score: ${score + bonus}`;
 
   introDone = false;
+
+  highScores = [];
+  highScores = Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["a" /* retrieveHighScores */])();
 }
 
 // CREATE THREE SCENE
@@ -54805,7 +54816,7 @@ function initCannon() {
 
 // CREATE SHIP
 // INSTANTIATE A LOADER
-var loader = new __WEBPACK_IMPORTED_MODULE_0_three__["OBJLoader"]();
+const loader = new __WEBPACK_IMPORTED_MODULE_0_three__["OBJLoader"]();
 
 // LOAD A RESOURCE
 loader.load(
@@ -63956,7 +63967,7 @@ function getGeometry (object) {
     var position = new THREE.Vector3(),
         quaternion = new THREE.Quaternion(),
         scale = new THREE.Vector3();
-    if (meshes[0].geometry instanceof THREE.BufferGeometry) {
+    if (meshes[0].geometry.isBufferGeometry) {
       if (meshes[0].geometry.attributes.position) {
         tmp.fromBufferGeometry(meshes[0].geometry);
       }
@@ -63972,7 +63983,7 @@ function getGeometry (object) {
   // Recursively merge geometry, preserving local transforms.
   while ((mesh = meshes.pop())) {
     mesh.updateMatrixWorld();
-    if (mesh.geometry instanceof THREE.BufferGeometry) {
+    if (mesh.geometry.isBufferGeometry) {
       tmp.fromBufferGeometry(mesh.geometry);
       combined.merge(tmp, mesh.matrixWorld);
     } else {
@@ -64888,10 +64899,12 @@ function saveHighScore(name, score) {
 
 function retrieveHighScores() {
   let highScores = [];
-  firebase.database().ref('highscores/').orderByChild('score').limitToLast(10).once('value', scores => {
+  firebase.database().ref('highscores/').orderByChild('score').limitToLast(10).on('value', scores => {
+    // RETRIEVE SCORES
     scores.forEach(score => {
       highScores.push(score.val());
     });
+    // SORT SCORES
     highScores = highScores.sort((a, b) => {
       return a.score > b.score ? -1 : 1;
     });
