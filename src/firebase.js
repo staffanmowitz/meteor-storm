@@ -36,10 +36,12 @@ export function retrieveHighScores() {
     .ref('highscores/')
     .orderByChild('score')
     .limitToLast(10)
-    .once('value', scores => {
+    .on('value', scores => {
+      // RETRIEVE SCORES
       scores.forEach(score => {
         highScores.push(score.val())
       })
+      // SORT SCORES
       highScores = highScores.sort((a, b) => {
         return a.score > b.score ? -1 : 1
       })

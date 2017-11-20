@@ -27,7 +27,7 @@ let timeStep = 1 / 60
 
 let score = 0
 let bonus = 0
-let lives = 6
+let lives = 1
 
 let countScore = false
 
@@ -42,7 +42,7 @@ let shootCount = 0
 
 let introDone = false
 
-let highScores = retrieveHighScores()
+let highScores
 
 // FILTER GROUPS
 const SHIP = 1
@@ -144,8 +144,14 @@ scoreForm.appendChild(formButton)
 scoreForm.addEventListener('submit', e => {
   e.preventDefault()
   let name = nameInput.value
+
   saveHighScore(name, score + bonus)
   scoreForm.classList.add('hide')
+
+  // RESET AND RETRIEVE HIGH SCORES
+  highScores = []
+  highScores = retrieveHighScores()
+
   printHighScores()
 })
 gameOverContainer.appendChild(scoreForm)
@@ -386,6 +392,9 @@ function gameOver(shipBody, threeShip) {
   scoreText.nodeValue = `Your Score: ${score + bonus}`
 
   introDone = false
+
+  highScores = []
+  highScores = retrieveHighScores()
 }
 
 // CREATE THREE SCENE
@@ -652,7 +661,7 @@ function initCannon() {
 
 // CREATE SHIP
 // INSTANTIATE A LOADER
-var loader = new THREE.OBJLoader()
+const loader = new THREE.OBJLoader()
 
 // LOAD A RESOURCE
 loader.load(
