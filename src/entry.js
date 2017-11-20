@@ -60,9 +60,11 @@ const dieSound = new Howl({ src: 'die.mp3' })
 const meteorExplosionSound = new Howl({ src: 'meteor_explosion.mp3' })
 const music = new Howl({
   src: 'meteor_storm_theme.mp3',
-  loop: true,
-  autoplay: true
+  loop: true
 })
+
+music.play()
+music.fade(0, 1, 500)
 
 const musicMelody = new Howl({
   src: 'meteor_storm_melody.mp3',
