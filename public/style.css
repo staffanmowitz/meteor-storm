@@ -176,9 +176,10 @@ figcaption {
   list-style-position: inside;
   list-style-type: decimal-leading-zero;
   margin: 0;
-  padding: 0;
+  padding: 0 20px;
   font-size: 28px;
-  width: 25vw;
+  width: 100%;
+  max-width: 500px;
 }
 
 .high-score li {
