@@ -15,6 +15,8 @@ firebase
   .catch(function(error) {
     let errorCode = error.code
     let errorMessage = error.message
+    console.log(errorCode)
+    console.log(errorMessage)
   })
 
 export const database = firebase.database()
@@ -28,6 +30,8 @@ export function saveHighScore(name, score) {
       score: score
     })
 }
+
+saveHighScore('TESTER', 123456)
 
 export function retrieveHighScores() {
   let highScores = []
