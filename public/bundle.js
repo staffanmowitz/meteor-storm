@@ -54378,10 +54378,8 @@ scoreForm.addEventListener('submit', e => {
   e.preventDefault();
   let name = nameInput.value;
 
-  if (name.lenght > 0 || name.lenght <= 6) {
-    Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
-    scoreForm.classList.add('hide');
-  }
+  Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
+  scoreForm.classList.add('hide');
 
   // RESET AND RETRIEVE HIGH SCORES
   highScores = [];
@@ -64915,6 +64913,8 @@ firebase.initializeApp(config);
 firebase.auth().signInAnonymously().catch(function (error) {
   let errorCode = error.code;
   let errorMessage = error.message;
+  console.log(errorCode);
+  console.log(errorMessage);
 });
 
 const database = firebase.database();
@@ -64927,6 +64927,8 @@ function saveHighScore(name, score) {
     score: score
   });
 }
+
+saveHighScore('TESTER', 123456);
 
 function retrieveHighScores() {
   let highScores = [];
