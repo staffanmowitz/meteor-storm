@@ -212,8 +212,13 @@ function printHighScores() {
   // FILL LIST WITH HIGH SCORES
   highScores.forEach(score => {
     const listItem = document.createElement('li')
-    const listText = document.createTextNode(`${score.name} ${score.score}`)
-    listItem.appendChild(listText)
+    const listName = document.createElement('span')
+    listName.innerHTML = score.name
+    const listScore = document.createElement('span')
+    listScore.innerHTML = score.score
+    listItem.appendChild(listName)
+    listItem.appendChild(listScore)
+
     highScoreList.appendChild(listItem)
   })
 

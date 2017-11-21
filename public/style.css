@@ -7,6 +7,8 @@
 }
 
 body {
+  height: 100vh;
+  width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -15,10 +17,11 @@ body {
   padding: 0;
   background-color: black;
   color: white;
+  overflow: hidden;
 }
 canvas {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   outline: none;
 }
 
@@ -67,23 +70,42 @@ button:hover {
   margin: 0;
 }
 
-.welcome {
+.hide {
+  opacity: 0;
+}
+
+.remove,
+.welcome.remove,
+.game-over.remove,
+.high-score.remove {
+  display: none;
+}
+
+.welcome,
+.game-over,
+.high-score {
+  height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  top: 25%;
+  justify-content: center;
   position: fixed;
   text-align: center;
-  font-size: 96px;
   transition: opacity 1s;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.welcome {
+  font-size: 96px;
 }
 
 .controls {
-  /*border: 1px solid white;*/
+  display: flex;
   margin-top: 80px;
   width: 100%;
   font-size: 24px;
-  display: flex;
   justify-content: center;
 }
 
@@ -119,17 +141,6 @@ figcaption {
   border: 1px solid #4ef7da;
 }
 
-.hide {
-  opacity: 0;
-}
-
-.remove,
-.welcome.remove,
-.game-over.remove,
-.high-score.remove {
-  display: none;
-}
-
 .counters {
   padding: 0 20px;
   position: fixed;
@@ -157,29 +168,29 @@ figcaption {
 
 .game-over,
 .high-score {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: fixed;
-  text-align: center;
-  transition: opacity 1s;
   font-size: 36px;
-  text-align: center;
-  z-index: 1;
-}
-
-.game-over {
-  top: 25%;
-}
-
-.high-score {
-  top: 10%;
 }
 
 .high-score ol {
-  width: 100%;
+  text-align: left;
   list-style-position: inside;
   list-style-type: decimal-leading-zero;
   margin: 0;
+  padding: 0;
   font-size: 28px;
+  width: 25vw;
+}
+
+.high-score li {
+  width: 100%;
+  position: relative;
+}
+
+.high-score li span:first-child {
+}
+
+.high-score li span:last-child {
+  position: absolute;
+  right: 0;
+  text-align: right;
 }
