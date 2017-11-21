@@ -54378,8 +54378,10 @@ scoreForm.addEventListener('submit', e => {
   e.preventDefault();
   let name = nameInput.value;
 
-  Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
-  scoreForm.classList.add('hide');
+  if (name.lenght > 0 || name.lenght <= 6) {
+    Object(__WEBPACK_IMPORTED_MODULE_5__firebase_js__["b" /* saveHighScore */])(name, score + bonus);
+    scoreForm.classList.add('hide');
+  }
 
   // RESET AND RETRIEVE HIGH SCORES
   highScores = [];
@@ -54419,8 +54421,13 @@ function printHighScores() {
   // FILL LIST WITH HIGH SCORES
   highScores.forEach(score => {
     const listItem = document.createElement('li');
-    const listText = document.createTextNode(`${score.name} ${score.score}`);
-    listItem.appendChild(listText);
+    const listName = document.createElement('span');
+    listName.innerHTML = score.name;
+    const listScore = document.createElement('span');
+    listScore.innerHTML = score.score;
+    listItem.appendChild(listName);
+    listItem.appendChild(listScore);
+
     highScoreList.appendChild(listItem);
   });
 
