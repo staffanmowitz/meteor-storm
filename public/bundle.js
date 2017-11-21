@@ -64913,8 +64913,6 @@ firebase.initializeApp(config);
 firebase.auth().signInAnonymously().catch(function (error) {
   let errorCode = error.code;
   let errorMessage = error.message;
-  console.log(errorCode);
-  console.log(errorMessage);
 });
 
 const database = firebase.database();
@@ -64927,8 +64925,6 @@ function saveHighScore(name, score) {
     score: score
   });
 }
-
-saveHighScore('TESTER', 123456);
 
 function retrieveHighScores() {
   let highScores = [];
